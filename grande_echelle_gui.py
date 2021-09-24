@@ -148,7 +148,7 @@ class Reglage(Screen):
     threshold = NumericProperty(0.8)
     profondeur_mini = NumericProperty(1500)
     profondeur_maxi = NumericProperty(4000)
-    x_maxi = NumericProperty(1500)
+    x_maxi = NumericProperty(500)
     d_lissage = NumericProperty(50)
     x_coeff = NumericProperty(0.20)
     etendue = NumericProperty(200)
@@ -379,7 +379,7 @@ class Grande_EchelleApp(App):
                                             'film': 'ge_1920_14_moy.mp4',
                                             'profondeur_mini': 1500,
                                             'profondeur_maxi': 4000,
-                                            'x_maxi': 1500,
+                                            'x_maxi': 500,
                                             'd_mode': 'simple',
                                             'x_mode': 'simple',
                                             'd_lissage': 50,
@@ -522,7 +522,7 @@ class Grande_EchelleApp(App):
                 self.config.set('histopocene', 'profondeur_maxi', self.profondeur_maxi)
 
             if token == ('histopocene', 'x_maxi'):
-                if value < 500: value = 500
+                if value < 100: value = 100
                 if value > 2000: value = 2000
                 self.x_maxi = value
                 self.config.set('histopocene', 'x_maxi', self.x_maxi)

@@ -548,8 +548,9 @@ def apply_brightness_contrast(img, brightness=0, contrast=0):
     Brightness range -255 to 255
     Contrast range -127 to 127
     """
-    brightness = 255*brightness + 255
-    contrast = 127*contrast + 127
+
+    brightness = (255*brightness + 255)
+    contrast = (127*contrast + 127)
 
     brightness = int((brightness - 0) * (255 - (-255)) / (510 - 0) + (-255))
 
