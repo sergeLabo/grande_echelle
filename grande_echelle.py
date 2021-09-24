@@ -55,9 +55,10 @@ class GrandeEchelle:
         self.d_lissage = int(self.config['histopocene']['d_lissage'])
         self.profondeur_mini = int(self.config['histopocene']['profondeur_mini'])
         self.profondeur_maxi = int(self.config['histopocene']['profondeur_maxi'])
+        self.x_maxi = int(self.config['histopocene']['x_maxi'])
+
         self.x_coeff = float(self.config['histopocene']['x_coeff'])
         self.etendue = int(self.config['histopocene']['etendue'])
-        self.with_x = int(self.config['histopocene']['with_x'])
         self.x_lissage = int(self.config['histopocene']['x_lissage'])
 
         self.info = 0
@@ -94,20 +95,12 @@ class GrandeEchelle:
 
                     # En mm, entre -2000 et 2000
                     x = data[1]
-                    if not self.with_x:
-                        # Méthode moyenne glissante sur 800 cm
-                        self.get_frame_fast(depth)
-                    else:
-                        # Utilisation de la surface de beaucoup de cm2
-                        self.get_frame_slow(depth, x)
+                    # Utilisation de la surface de beaucoup de cm2
+                    self.get_frame_slow(depth, x)
 
             elif data[0] == 'info':
                 self.info = data[1]
                 print("info reçu:", self.info)
-
-            elif data[0] == 'with_x':
-                self.with_x = data[1]
-                print("with_x reçu:", self.with_x)
 
             elif data[0] == 'profondeur_mini':
                 self.profondeur_mini = data[1]
@@ -155,12 +148,10 @@ class GrandeEchelle:
             sleep(0.001)
 
     def get_frame_slow(self, depth, x):
-        """
-                            if x < -2000:
-                        x = -2000
-                    if x > 2000:
-                        x = 2000
-        """
+        """ Appelé à chaque frame"""
+
+        print(depth, x)
+
         # Mise à jour des piles
         self.histo_d.append(depth)
         del self.histo_d[0]
@@ -217,9 +208,6 @@ class GrandeEchelle:
         définir self.frame suffit pour être appliqué,
         le retour sert en mode slow
         """
-        # Maj de la pile des profondeurs
-        self.histo_d.append(depth)
-        del self.histo_d[0]
 
         # Pour le mode slow
         depth_liss = int(moving_average(np.array(self.histo_d),
@@ -246,7 +234,7 @@ class GrandeEchelle:
 
     def draw_text(self, img, frame):
         if self.info:
-            l = [frame, self.with_x, self.profondeur_mini,
+            l = [frame, self.profondeur_mini,
                 self.profondeur_maxi, self.d_mode, self.x_mode,
                 self.d_lissage, self.x_coeff, self.etendue, self.x_lissage]
             text = ""
@@ -310,11 +298,3 @@ def grande_echelle_run(conn, current_dir, config):
     ge.run()
 
 
-if __name__ == '__main__':
-    conn = None
-    current_dir = '/media/data/3D/projets/grande_echelle'
-
-    ini_file = current_dir + '/grande_echelle.ini'
-    config = MyConfig(ini_file).conf
-
-    ge = grande_echelle_run(conn, current_dir, config)

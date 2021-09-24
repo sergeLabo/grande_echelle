@@ -163,6 +163,7 @@ class PosenetRealsense:
         # Pour éliminer les trops loing ou trop près, en mêtre
         self.profondeur_maxi = int(self.config['histopocene']['profondeur_maxi'])
         self.profondeur_mini = int(self.config['histopocene']['profondeur_mini'])
+        self.x_maxi = int(self.config['histopocene']['x_maxi'])
 
         self.set_pipeline()
         self.get_engine()
@@ -339,10 +340,12 @@ class PosenetRealsense:
                         all_x_z.append([100000, 100000])
 
         # [[200, 5000], [500, 3000]]
-        # Je ne garde que ceux devant profondeur_maxi et derrière le mini
+        # Je ne garde que ceux devant profondeur_maxi, derrière le mini,
+        # et dans la plage des x
         all_x = []  # tous les x valides
         for item in all_x_z:
-            if item[1] < self.profondeur_maxi and item[1] > self.profondeur_mini:
+            if self.profondeur_mini < item[1] < self.profondeur_maxi\
+                    and -self.x_maxi < item[0] < self.x_maxi:
                 all_x.append(item[0])
 
         if all_x:
@@ -606,11 +609,3 @@ def posenet_realsense_run(conn, current_dir, config):
 
 
 
-if __name__ == '__main__':
-
-    conn = None
-    current_dir = '/media/data/3D/projets/grande_echelle'
-
-    ini_file = current_dir + '/grande_echelle.ini'
-    config = MyConfig(ini_file).conf
-    posenet_realsense_run(conn, current_dir, config)

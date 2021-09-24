@@ -47,7 +47,6 @@ class MainScreen(Screen):
         self.around = 1
 
         # [histopocene]
-        self.with_x = 1
         self.profondeur_mini = 1500
         self.profondeur_maxi = 4000
         self.d_mode = 0
@@ -138,7 +137,6 @@ class Reglage(Screen):
     Switch:
             d_mode = 0 = 'simple'
             x_mode = 0 = 'simple'
-            with_x = 1
             info = 0
     Options:
             frame_rate_du_film = 14
@@ -157,7 +155,6 @@ class Reglage(Screen):
     x_lissage = NumericProperty(25)
     d_mode = NumericProperty(0)
     x_mode = NumericProperty(0)
-    with_x = NumericProperty(1)
     info = NumericProperty(0)
 
     def __init__(self, **kwargs):
@@ -179,7 +176,6 @@ class Reglage(Screen):
         else:
             self.x_mode = 1
 
-        self.with_x = int(self.app.config.get('histopocene', 'with_x'))
         self.profondeur_mini = int(self.app.config.get('histopocene', 'profondeur_mini'))
         self.profondeur_maxi = int(self.app.config.get('histopocene', 'profondeur_maxi'))
         self.x_maxi = int(self.app.config.get('histopocene', 'x_maxi'))
@@ -318,19 +314,6 @@ class Reglage(Screen):
         self.app.config.write()
         print("x_mode =", self.x_mode, x_mode)
 
-    def on_switch_with_x(self, instance, value):
-        scr = self.app.screen_manager.get_screen('Main')
-        if value:
-            value = 1
-        else:
-            value = 0
-        self.with_x = value
-        if scr.p2_conn:
-            scr.p2_conn.send(['with_x', self.with_x])
-        self.app.config.set('histopocene', 'with_x', self.with_x)
-        self.app.config.write()
-        print("with_x =", self.with_x)
-
     def on_switch_info(self, instance, value):
         scr = self.app.screen_manager.get_screen('Main')
         if value:
@@ -392,8 +375,7 @@ class Grande_EchelleApp(App):
                                             'around': 1 })
 
         config.setdefaults( 'histopocene',
-                                        {   'with_x': 1,
-                                            'frame_rate_du_film': 14,
+                                        {   'frame_rate_du_film': 14,
                                             'film': 'ge_1920_14_moy.mp4',
                                             'profondeur_mini': 1500,
                                             'profondeur_maxi': 4000,
@@ -441,11 +423,6 @@ class Grande_EchelleApp(App):
                             "section": "pose", "key": "around"},
 
                     {"type": "title", "title": "Histopocene"},
-
-                        {   "type": "numeric",
-                            "title": "Détection avec les x",
-                            "desc": "0 ou 1",
-                            "section": "histopocene", "key": "with_x"},
 
                         {   "type": "string",
                             "title": "Nom du film",
@@ -532,11 +509,6 @@ class Grande_EchelleApp(App):
                 self.around = value
                 self.config.set('pose', 'around', self.around)
 
-            if token == ('histopocene', 'with_x'):
-                if value in [0, 1]:
-                    self.with_x = value
-                    self.config.set('histopocene', 'with_x', self.with_x)
-
             if token == ('histopocene', 'profondeur_mini'):
                 if value < 500: value = 500
                 if value > 2000: value = 2000
@@ -550,8 +522,8 @@ class Grande_EchelleApp(App):
                 self.config.set('histopocene', 'profondeur_maxi', self.profondeur_maxi)
 
             if token == ('histopocene', 'x_maxi'):
-                if value < 3000: value = 3000
-                if value > 8000: value = 8000
+                if value < 500: value = 500
+                if value > 2000: value = 2000
                 self.x_maxi = value
                 self.config.set('histopocene', 'x_maxi', self.x_maxi)
 
