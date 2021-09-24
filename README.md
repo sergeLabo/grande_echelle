@@ -42,11 +42,9 @@ python3 -m pip install -r requirements.txt
 ```
 
 ### Excécution
-Un terminal avec
-``` python
-cd /le/dossier/de/grande_echelle
-./mon_env/bin/python3 main.py
-```
+Copier coller le lanceur grande-echelle sur le Bureau
+
+Ce lanceur lance un terminal et l'interface graphique. Clic dans la fenêtre de l'interface pour l'activer, puis clic sur Lancer Grande Echelle
 
 ### Fichier de configuration
 
@@ -58,33 +56,38 @@ width_input = 1280
 height_input = 720
 
 [pose]
+brightness = -0.11
+contrast = -0.06
 threshold = 0.8
 around = 1
+luminosity = 0
 
 [histopocene]
 with_x = 1
-frame_rate_du_film = 25
-film = histopocene_25.mp4
-profondeur_mini = 994
-profondeur_maxi = 4034
-d_mode = exponentiel
+frame_rate_du_film = 14
+film = ge_1920_14_moy.mp4
+profondeur_mini = 1500
+profondeur_maxi = 4000
+x_maxi = 1500
+d_mode = simple
 x_mode = simple
-d_lissage = 50
-x_coeff = 0.1
+d_lissage = 100
+x_coeff = 0.2
 etendue = 200
-x_lissage = 25
+x_lissage = 50
 info = 0
 ```
 
 #### Utilisation
-* Bascule full_screen en cours avec:
+* Bascule full_screen en cours en activant la fenêtre à aggrandir puis:
     * espace
 * Options permet de modifier tous les paramètres mais il faut relancer l'application pour les paramètres non modifiables à chaud
 
 
 #### Explications sur les  paramètres
 
-* threshold = 70 seuil de confiance de la détection, plus c'est grand moins il y a d'erreur, mais plus la détection est difficile.
+* brightness et contrast: régler au centre de la plage de bonne détection
+* threshold = 80 seuil de confiance de la détection, plus c'est grand moins il y a d'erreur, mais plus la détection est difficile.
 * around = 1 nombre de pixels autour de la détection pour calcul moyenné de la profondeur, 1 à 3 mais ne change rien
 * frame_rate_du_film = 25 Créer le film avec cette valeur !
 * film = 'ge_1920_25_moy.mp4' 1920x1080, 25 fps!
@@ -92,6 +95,7 @@ info = 0
 * d_mode = 'exponentiel' pour le calcul de la moyenne glissante
 * profondeur_mini = 1200, cale le 0 de la profondeur
 * profondeur_maxi = 4000, limite le maxi
+* x_maxi = 1500, limite la plage des x
 * x_coeff = 0.2, pourcentage d'influence des x en mode lent
 * etendue = 200, plage de variation de la profondeur, au dessus utilisation de la profondeur, en dessous utilisation des x
 * with_x = 1, si 0 seulement avec la profondeur, si 1 utilise la profondeur et les x

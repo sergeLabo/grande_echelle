@@ -94,10 +94,6 @@ class GrandeEchelle:
 
                     # En mm, entre -2000 et 2000
                     x = data[1]
-                    if x < -2000:
-                        x = -2000
-                    if x > 2000:
-                        x = 2000
                     if not self.with_x:
                         # Méthode moyenne glissante sur 800 cm
                         self.get_frame_fast(depth)
@@ -120,6 +116,10 @@ class GrandeEchelle:
             elif data[0] == 'profondeur_maxi':
                 self.profondeur_maxi = data[1]
                 print("profondeur_maxi reçu:", self.profondeur_maxi)
+
+            elif data[0] == 'x_maxi':
+                self.x_maxi = data[1]
+                print("x_maxi reçu:", self.x_maxi)
 
             elif data[0] == 'd_mode':
                 self.d_mode = data[1]
@@ -155,7 +155,12 @@ class GrandeEchelle:
             sleep(0.001)
 
     def get_frame_slow(self, depth, x):
-
+        """
+                            if x < -2000:
+                        x = -2000
+                    if x > 2000:
+                        x = 2000
+        """
         # Mise à jour des piles
         self.histo_d.append(depth)
         del self.histo_d[0]
