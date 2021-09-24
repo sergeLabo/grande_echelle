@@ -217,6 +217,26 @@
                     value_position: root.profondeur_maxi
                     on_value: root.do_slider('profondeur_maxi', *args)
 
+                BoxLayout: # une boite texte et affichage x maxi
+                    size_hint_y: 0.10
+                    orientation: 'horizontal'
+                    Label:  # x_maxi
+                        text: 'X maxi'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:
+                        text: str(root.x_maxi)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider:  # x_maxi
+                    size_hint_y: 0.10
+                    id: x_maxi
+                    orientation: 'horizontal'
+                    range: 3000, 8000
+                    value: root.x_maxi
+                    value_position: root.x_maxi
+                    on_value: root.do_slider('x_maxi', *args)
+
                 BoxLayout: # une boite texte et affichage etendue
                     size_hint_y: 0.10
                     orientation: 'horizontal'

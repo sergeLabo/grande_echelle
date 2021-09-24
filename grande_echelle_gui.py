@@ -150,6 +150,7 @@ class Reglage(Screen):
     threshold = NumericProperty(0.8)
     profondeur_mini = NumericProperty(1500)
     profondeur_maxi = NumericProperty(4000)
+    x_maxi = NumericProperty(1500)
     d_lissage = NumericProperty(50)
     x_coeff = NumericProperty(0.20)
     etendue = NumericProperty(200)
@@ -181,6 +182,7 @@ class Reglage(Screen):
         self.with_x = int(self.app.config.get('histopocene', 'with_x'))
         self.profondeur_mini = int(self.app.config.get('histopocene', 'profondeur_mini'))
         self.profondeur_maxi = int(self.app.config.get('histopocene', 'profondeur_maxi'))
+        self.x_maxi = int(self.app.config.get('histopocene', 'x_maxi'))
         self.d_lissage = int(self.app.config.get('histopocene', 'd_lissage'))
         self.x_coeff = float(self.app.config.get('histopocene', 'x_coeff'))
         self.etendue = int(self.app.config.get('histopocene', 'etendue'))
@@ -238,6 +240,15 @@ class Reglage(Screen):
 
             if scr.p2_conn:
                 scr.p2_conn.send(['profondeur_maxi', self.profondeur_maxi])
+
+        if iD == 'x_maxi':
+            self.x_maxi = int(value)
+
+            self.app.config.set('histopocene', 'x_maxi', self.x_maxi)
+            self.app.config.write()
+
+            if scr.p2_conn:
+                scr.p2_conn.send(['x_maxi', self.x_maxi])
 
         if iD == 'd_lissage':
             self.d_lissage = int(value)
@@ -386,6 +397,7 @@ class Grande_EchelleApp(App):
                                             'film': 'ge_1920_14_moy.mp4',
                                             'profondeur_mini': 1500,
                                             'profondeur_maxi': 4000,
+                                            'x_maxi': 1500,
                                             'd_mode': 'simple',
                                             'x_mode': 'simple',
                                             'd_lissage': 50,
@@ -454,6 +466,11 @@ class Grande_EchelleApp(App):
                             "title": "Profondeur de détection maxi",
                             "desc": "De 3000 à 8000",
                             "section": "histopocene", "key": "profondeur_maxi"},
+
+                        {   "type": "numeric",
+                            "title": "X maxi par rapport à l'axe",
+                            "desc": "De 100 à 2000",
+                            "section": "histopocene", "key": "x_maxi"},
 
                         {   "type": "string",
                             "title": "Mode de Lissage de la profondeur",
@@ -531,6 +548,12 @@ class Grande_EchelleApp(App):
                 if value > 8000: value = 8000
                 self.profondeur_maxi = value
                 self.config.set('histopocene', 'profondeur_maxi', self.profondeur_maxi)
+
+            if token == ('histopocene', 'x_maxi'):
+                if value < 3000: value = 3000
+                if value > 8000: value = 8000
+                self.x_maxi = value
+                self.config.set('histopocene', 'x_maxi', self.x_maxi)
 
             if token == ('histopocene', 'd_mode'):
                 # value = simple ou exponentiel
