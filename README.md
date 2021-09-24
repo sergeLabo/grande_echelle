@@ -56,18 +56,17 @@ width_input = 1280
 height_input = 720
 
 [pose]
-brightness = -0.11
-contrast = -0.06
+brightness = 0.05
+contrast = 0.13
 threshold = 0.8
 around = 1
 
 [histopocene]
-with_x = 1
 frame_rate_du_film = 14
 film = ge_1920_14_moy.mp4
-profondeur_mini = 1500
-profondeur_maxi = 4000
-x_maxi = 1500
+profondeur_mini = 1000
+profondeur_maxi = 3800
+x_maxi = 230
 d_mode = simple
 x_mode = simple
 d_lissage = 100
