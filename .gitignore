@@ -3,7 +3,6 @@ old/
 *.geany
 mon_env/
 *.mp4
-run_grande_echelle_without_gui.sh
 
 
 # Byte-compiled / optimized / DLL files
