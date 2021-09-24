@@ -375,8 +375,8 @@ class Grande_EchelleApp(App):
                                             'around': 1 })
 
         config.setdefaults( 'histopocene',
-                                        {   'frame_rate_du_film': 14,
-                                            'film': 'ge_1920_14_moy.mp4',
+                                        {   'frame_rate_du_film': 25,
+                                            'film': 'ge_1920_25_moy.mp4',
                                             'profondeur_mini': 1500,
                                             'profondeur_maxi': 4000,
                                             'x_maxi': 500,
