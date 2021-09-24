@@ -96,7 +96,6 @@ info = 0
 * x_maxi = 1500, limite la plage des x
 * x_coeff = 0.2, pourcentage d'influence des x en mode lent
 * etendue = 200, plage de variation de la profondeur, au dessus utilisation de la profondeur, en dessous utilisation des x
-* with_x = 1, si 0 seulement avec la profondeur, si 1 utilise la profondeur et les x
 * x_lissage = 50, lissage des x en mode lent, pour le calcul de la moyenne glissante
 * x_mode = 'simple', calcul de la moyenne glissante sans pondération
 
