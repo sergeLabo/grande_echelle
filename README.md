@@ -32,7 +32,7 @@ python3 -m pip install --upgrade pip
 sudo apt install python3-venv
 
 # Installation de l'environnement
-cd /le/dossier/de/grande_echelle/histopocene
+cd /le/dossier/de/grande_echelle/
 # Création du dossier environnement si pas encore créé
 python3 -m venv --system-site-packages mon_env
 # Activation
