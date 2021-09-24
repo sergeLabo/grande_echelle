@@ -60,7 +60,6 @@ brightness = -0.11
 contrast = -0.06
 threshold = 0.8
 around = 1
-luminosity = 0
 
 [histopocene]
 with_x = 1
