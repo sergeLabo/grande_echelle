@@ -1,0 +1,324 @@
+#:kivy 2.0.0
+
+
+<MainScreen>:
+    BoxLayout: # une boite pour tout
+        orientation: 'vertical'
+        canvas:
+            Color:
+                rgb: 1.2, 0, 1.2  # Fond blanc
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        BoxLayout: # une boite pour baisser le titre
+            orientation: 'vertical'
+            size_hint_y: 0.2
+        Label:  # Titre de l'application
+            size_hint_y: 0.3
+            text: root.titre
+            size_hint_y: 0.2
+            font_size: '64dp'
+            color: (0, 0, 0, 1)
+
+        BoxLayout: # bouton pour lancer Grande Echelle
+            orientation: 'vertical'
+            size_hint_y: 0.5
+            BoxLayout:
+                size_hint_y: 0.2
+            BoxLayout: #
+                orientation: 'horizontal'
+                BoxLayout:
+                    size_hint_x: 0.2
+                Button:  # Lancer  à
+                    size_hint_x: 0.5
+                    size_hint_y: 0.6
+                    background_color: (0.8, 0.8, 0.8, 1)
+                    text: 'Lancer Grande Echelle'
+                    color: (0, 1, 0, 1)
+                    font_size: '22dp'
+                    disabled: True if root.enable else False
+                    on_release: root.run_grande_echelle()
+                BoxLayout:
+                    size_hint_x: 0.2
+            BoxLayout:
+                size_hint_y: 0.4
+
+
+        BoxLayout: # une boite pour espacer
+            orientation: 'horizontal'
+            size_hint_y: 0.05
+
+
+        BoxLayout: # boutons en bas
+            orientation: 'horizontal'
+            size_hint_y: 0.2
+            Button:  # Settings
+                background_color: (0.7, 0.7, 0.7, 1)
+                text: 'Réglages à chaud'
+                color: (0, 1, 0, 1)
+                font_size: '22dp'
+                on_release: app.root.current = 'Reglage'
+            Button:  # Options
+                background_color: (0.7, 0.7, 0.7, 1)
+                text: 'Options'
+                color: (0, 1, 0, 1)
+                font_size: '22dp'
+                on_release: app.open_settings()
+            Button:  # Quitter
+                background_color: (0.6, 0.6, 0.6, 1)
+                text: 'Quitter'
+                color: (0, 1, 0, 1)
+                font_size: '22dp'
+                on_release: app.do_quit()
+
+
+<Reglage>:
+    BoxLayout: # une boite pour tout
+        orientation: 'vertical'
+
+        BoxLayout: # une boite pour slider et switch
+            orientation: 'horizontal'
+            BoxLayout: # une boite pour switch
+                size_hint_x: 0.4
+
+                BoxLayout:
+                    orientation: 'vertical'
+                    BoxLayout: # with_x
+                        orientation: 'vertical'
+                        Label:
+                            text: 'Avec les x'
+                        Switch:
+                            active: True
+                            id: with_x
+                            on_active: root.on_switch_with_x(*args)
+                    BoxLayout: # d_mode
+                        orientation: 'vertical'
+                        Label:
+                            text: 'Lissage\nexponentiel\n de la\nprofondeur'
+                        Switch:
+                            id: d_mode
+                            on_active: root.on_switch_d_mode(*args)
+                    BoxLayout: # x_mode
+                        orientation: 'vertical'
+                        Label:
+                            text: 'Lissage\nexponentiel\ndes x'
+                        Switch:
+                            id: x_mode
+                            on_active: root.on_switch_x_mode(*args)
+                    BoxLayout: # info
+                        orientation: 'vertical'
+                        Label:
+                            text: 'Info dans Histopocene'
+                        Switch:
+                            id: info
+                            on_active: root.on_switch_info(*args)
+
+            BoxLayout: # une boite pour slider
+                orientation: 'vertical'
+                size_hint_x: 0.6
+
+                BoxLayout: # une boite texte et affichage brightness
+                    orientation: 'horizontal'
+                    size_hint_y: 0.10
+                    Label:  # brightness
+                        text: 'Luminosité'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:  # brightness
+                        text: str(root.brightness)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider: # brightness
+                    size_hint_y: 0.10
+                    id: brightness
+                    orientation: 'horizontal'
+                    range: -1, 1
+                    value: root.brightness
+                    value_position: root.brightness
+                    on_value: root.do_slider('brightness', *args)
+
+                BoxLayout: # une boite texte et affichage contrast
+                    orientation: 'horizontal'
+                    size_hint_y: 0.10
+                    Label:  # contrast
+                        text: 'Contraste'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:  # contrast
+                        text: str(root.contrast)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider: # contrast
+                    size_hint_y: 0.10
+                    id: contrast
+                    orientation: 'horizontal'
+                    range: -1, 1
+                    value: root.contrast
+                    value_position: root.contrast
+                    on_value: root.do_slider('contrast', *args)
+
+                BoxLayout: # une boite texte et affichage threshold
+                    orientation: 'horizontal'
+                    size_hint_y: 0.10
+                    Label:  # threshold
+                        text: 'Seuil de détection'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:  # threshold
+                        text: str(root.threshold)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider: # threshold
+                    size_hint_y: 0.10
+                    id: threshold
+                    orientation: 'horizontal'
+                    range: 0.01, 0.99
+                    value: root.threshold
+                    value_position: root.threshold
+                    on_value: root.do_slider('threshold', *args)
+
+                BoxLayout: # une boite texte et affichage profondeur_mini
+                    size_hint_y: 0.10
+                    orientation: 'horizontal'
+                    Label:  # profondeur_mini
+                        text: 'Profondeur mini'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:
+                        text: str(root.profondeur_mini)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider:  # around
+                    size_hint_y: 0.10
+                    id: profondeur_mini
+                    orientation: 'horizontal'
+                    range: 500, 2000
+                    value: root.profondeur_mini
+                    value_position: root.profondeur_mini
+                    on_value: root.do_slider('profondeur_mini', *args)
+
+                BoxLayout: # une boite texte et affichage profondeur_maxi
+                    size_hint_y: 0.10
+                    orientation: 'horizontal'
+                    Label:  # profondeur_maxi
+                        text: 'Profondeur maxi'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:
+                        text: str(root.profondeur_maxi)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider:  # profondeur_maxi
+                    size_hint_y: 0.10
+                    id: profondeur_maxi
+                    orientation: 'horizontal'
+                    range: 3000, 8000
+                    value: root.profondeur_maxi
+                    value_position: root.profondeur_maxi
+                    on_value: root.do_slider('profondeur_maxi', *args)
+
+                BoxLayout: # une boite texte et affichage etendue
+                    size_hint_y: 0.10
+                    orientation: 'horizontal'
+                    Label:  # etendue
+                        text: 'Etendue'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:
+                        text: str(root.etendue)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider:  # etendue
+                    size_hint_y: 0.10
+                    id: etendue
+                    orientation: 'horizontal'
+                    range: 100, 500
+                    value: root.etendue
+                    value_position: root.etendue
+                    on_value: root.do_slider('etendue', *args)
+
+                BoxLayout: # une boite texte et affichage d_lissage
+                    size_hint_y: 0.10
+                    orientation: 'horizontal'
+                    Label:  # d_lissage
+                        text: 'Lissage de la profondeur'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:
+                        text: str(root.d_lissage)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider:  # d_lissage
+                    size_hint_y: 0.10
+                    id: d_lissage
+                    orientation: 'horizontal'
+                    range: 10, 120
+                    value: root.d_lissage
+                    value_position: root.d_lissage
+                    on_value: root.do_slider('d_lissage', *args)
+
+                BoxLayout: # une boite texte et affichage x_coeff
+                    size_hint_y: 0.10
+                    orientation: 'horizontal'
+                    Label:  # x_coeff
+                        text: 'Coefficient sur x'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:
+                        text: str(root.x_coeff)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider:  # x_coeff
+                    size_hint_y: 0.10
+                    id: x_coeff
+                    orientation: 'horizontal'
+                    range: 0.1, 1
+                    value: root.x_coeff
+                    value_position: root.x_coeff
+                    on_value: root.do_slider('x_coeff', *args)
+
+                BoxLayout: # une boite texte et affichage x_lissage
+                    size_hint_y: 0.10
+                    orientation: 'horizontal'
+                    Label:  # x_lissage
+                        text: 'Lissage des x'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:
+                        text: str(root.x_lissage)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider:  # x_lissage
+                    size_hint_y: 0.10
+                    id: x_lissage
+                    orientation: 'horizontal'
+                    range: 10, 120
+                    value: root.x_lissage
+                    value_position: root.x_lissage
+                    on_value: root.do_slider('x_lissage', *args)
+
+        BoxLayout: # une boite pour espacer
+            orientation: 'horizontal'
+            size_hint_y: 0.05
+
+        BoxLayout: # une boite pour options retour quitter
+            orientation: 'horizontal'
+            size_hint_y: 0.15
+            Button:  # Settings
+                background_color: (0.7, 0.7, 0.7, 1)
+                text: 'Retour'
+                color: (0, 1, 0, 1)
+                font_size: '22dp'
+                on_release: app.root.current = 'Main'
+            Button:  # Options
+                background_color: (0.7, 0.7, 0.7, 1)
+                text: 'Options'
+                color: (0, 1, 0, 1)
+                font_size: '22dp'
+                on_release: app.open_settings()
+            Button:  # Quitter
+                background_color: (0.6, 0.6, 0.6, 1)
+                text: 'Quitter'
+                color: (0, 1, 0, 1)
+                font_size: '22dp'
+                on_release: app.do_quit()
