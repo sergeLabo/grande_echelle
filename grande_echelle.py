@@ -46,20 +46,15 @@ class GrandeEchelle:
             print("Le frame rate du film est à 0 !")
             os._exit(0)
 
-        # 0 = simple, 1 = 'exponentiel'
-        if self.config['histopocene']['d_mode'] == 'simple': self.d_mode = 0
-        else: self.d_mode = 1
-        if self.config['histopocene']['x_mode'] == 'simple': self.x_mode = 0
-        else: self.x_mode = 1
-
-        self.d_lissage = int(self.config['histopocene']['d_lissage'])
         self.profondeur_mini = int(self.config['histopocene']['profondeur_mini'])
         self.profondeur_maxi = int(self.config['histopocene']['profondeur_maxi'])
         self.x_maxi = int(self.config['histopocene']['x_maxi'])
-
         self.x_coeff = float(self.config['histopocene']['x_coeff'])
         self.etendue = int(self.config['histopocene']['etendue'])
+        self.d_lissage = int(self.config['histopocene']['d_lissage'])
+        self.d_mode = self.config['histopocene']['d_mode']
         self.x_lissage = int(self.config['histopocene']['x_lissage'])
+        self.x_mode = self.config['histopocene']['x_mode']
 
         self.info = 0
         self.block = 0
@@ -100,45 +95,45 @@ class GrandeEchelle:
 
             elif data[0] == 'info':
                 self.info = data[1]
-                print("info reçu:", self.info)
+                print("info reçu dans grande echelle:", self.info)
 
             elif data[0] == 'profondeur_mini':
                 self.profondeur_mini = data[1]
-                print("profondeur_mini reçu:", self.profondeur_mini)
+                print("profondeur_mini reçu dans grande echelle:", self.profondeur_mini)
 
             elif data[0] == 'profondeur_maxi':
                 self.profondeur_maxi = data[1]
-                print("profondeur_maxi reçu:", self.profondeur_maxi)
+                print("profondeur_maxi reçu dans grande echelle:", self.profondeur_maxi)
 
             elif data[0] == 'x_maxi':
                 self.x_maxi = data[1]
-                print("x_maxi reçu:", self.x_maxi)
+                print("x_maxi reçu dans grande echelle:", self.x_maxi)
 
             elif data[0] == 'd_mode':
                 self.d_mode = data[1]
-                print("d_mode reçu:", self.d_mode)
+                print("d_mode reçu dans grande echelle:", self.d_mode)
 
             elif data[0] == 'x_mode':
                 self.x_mode = data[1]
-                print(" reçu:", self.x_mode)
+                print("x_mode reçu dans grande echelle:", self.x_mode)
 
             elif data[0] == 'd_lissage':
                 self.d_lissage = data[1]
                 self.histo_d = [0]*self.d_lissage
-                print("d_lissage reçu:", self.d_lissage)
+                print("d_lissage reçu dans grande echelle:", self.d_lissage)
 
             elif data[0] == 'x_coeff':
                 self.x_coeff = data[1]
-                print("x_coeff reçu:", self.x_coeff)
+                print("x_coeff reçu dans grande echelle:", self.x_coeff)
 
             elif data[0] == 'etendue':
                 self.etendue = data[1]
-                print("etendue reçu:", self.etendue)
+                print("etendue reçu dans grande echelle:", self.etendue)
 
             elif data[0] == 'x_lissage':
                 self.x_lissage = data[1]
                 self.histo_x = [0]*self.x_lissage
-                print("x_lissage reçu:", self.x_lissage)
+                print("x_lissage reçu dans grande echelle:", self.x_lissage)
 
             elif data[0] == 'quit':
                 self.loop = 0
@@ -149,8 +144,6 @@ class GrandeEchelle:
 
     def get_frame_slow(self, depth, x):
         """ Appelé à chaque frame"""
-
-        print(depth, x)
 
         # Mise à jour des piles
         self.histo_d.append(depth)
@@ -179,6 +172,7 @@ class GrandeEchelle:
 
         # Fonctionnement en mode slow
         if self.block == 1:
+            print(self.x_mode)
             x_liss = int(moving_average(np.array(self.histo_x),
                                         self.x_lissage-2,
                                         type_=self.x_mode))
@@ -196,6 +190,7 @@ class GrandeEchelle:
 
         # Fonctionnement en mode fast self.block = 0
         else:
+            print(self.d_mode)
             depth = int(moving_average(np.array(self.histo_d),
                                         self.d_lissage-2,
                                         type_=self.d_mode))

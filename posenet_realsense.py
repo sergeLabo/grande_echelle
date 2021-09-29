@@ -268,12 +268,27 @@ class PosenetRealsense:
                 elif data[0] == 'threshold':
                     print('threshold reçu dans posenet:', data[1])
                     self.threshold = data[1]
+
                 elif data[0] == 'brightness':
                     print('brightness reçu dans posenet:', data[1])
                     self.brightness = data[1]
+
                 elif data[0] == 'contrast':
                     print('contrast reçu dans posenet:', data[1])
                     self.contrast = data[1]
+
+                elif data[0] == 'profondeur_mini':
+                    print('profondeur_mini reçu dans posenet::', data[1])
+                    self.profondeur_mini = data[1]
+
+                elif data[0] == 'profondeur_maxi':
+                    print('profondeur_maxi reçu dans posenet::', data[1])
+                    self.profondeur_maxi = data[1]
+
+                elif data[0] == 'x_maxi':
+                    print('x_maxi reçu dans posenet:', data[1])
+                    self.x_maxi = data[1]
+
 
             sleep(0.001)
 

@@ -225,6 +225,8 @@ class Reglage(Screen):
             self.app.config.set('histopocene', 'profondeur_mini', self.profondeur_mini)
             self.app.config.write()
 
+            if scr.p1_conn:
+                scr.p1_conn.send(['profondeur_mini', self.profondeur_mini])
             if scr.p2_conn:
                 scr.p2_conn.send(['profondeur_mini', self.profondeur_mini])
 
@@ -234,6 +236,8 @@ class Reglage(Screen):
             self.app.config.set('histopocene', 'profondeur_maxi', self.profondeur_maxi)
             self.app.config.write()
 
+            if scr.p1_conn:
+                scr.p1_conn.send(['profondeur_maxi', self.profondeur_maxi])
             if scr.p2_conn:
                 scr.p2_conn.send(['profondeur_maxi', self.profondeur_maxi])
 
@@ -242,7 +246,8 @@ class Reglage(Screen):
 
             self.app.config.set('histopocene', 'x_maxi', self.x_maxi)
             self.app.config.write()
-
+            if scr.p1_conn:
+                scr.p1_conn.send(['x_maxi', self.x_maxi])
             if scr.p2_conn:
                 scr.p2_conn.send(['x_maxi', self.x_maxi])
 
@@ -283,18 +288,17 @@ class Reglage(Screen):
                 scr.p2_conn.send(['x_lissage', self.x_lissage])
 
     def on_switch_d_mode(self, instance, value):
-
+        """le switch est 0 ou 1, seld.d_mode ne peut pas être str"""
         scr = self.app.screen_manager.get_screen('Main')
 
         if value:
-            value = 1
+            self.d_mode = 1
             d_mode = 'exponentiel'
         else:
-            value = 0
+            self.d_mode = 0
             d_mode = 'simple'
-        self.d_mode = value
         if scr.p2_conn:
-            scr.p2_conn.send(['d_mode', self.d_mode])
+            scr.p2_conn.send(['d_mode', d_mode])
         self.app.config.set('histopocene', 'd_mode', d_mode)
         self.app.config.write()
         print("d_mode =", self.d_mode, d_mode)
@@ -302,14 +306,14 @@ class Reglage(Screen):
     def on_switch_x_mode(self, instance, value):
         scr = self.app.screen_manager.get_screen('Main')
         if value:
-            value = 1
+            self.x_mode = 1
             x_mode = 'exponentiel'
         else:
-            value = 0
+            self.x_mode = 0
             x_mode = 'simple'
-        self.x_mode = value
+
         if scr.p2_conn:
-            scr.p2_conn.send(['x_mode', self.x_mode])
+            scr.p2_conn.send(['x_mode', x_mode])
         self.app.config.set('histopocene', 'x_mode', x_mode)
         self.app.config.write()
         print("x_mode =", self.x_mode, x_mode)
