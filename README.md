@@ -42,9 +42,9 @@ python3 -m pip install -r requirements.txt
 ```
 
 ### Excécution
-Copier coller le lanceur grande-echelle sur le Bureau
+Copier coller le lanceur grande-echelle.desktop sur le Bureau
 
-Ce lanceur lance un terminal et l'interface graphique. Clic dans la fenêtre de l'interface pour l'activer, puis clic sur Lancer Grande Echelle
+Ce lanceur lance un terminal et l'interface graphique. Clic dans la fenêtre de l'interface pour l'activer, puis clic sur grande-echelle
 
 ### Fichier de configuration
 
