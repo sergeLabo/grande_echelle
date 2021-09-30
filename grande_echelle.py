@@ -119,7 +119,7 @@ class GrandeEchelle:
 
             elif data[0] == 'd_lissage':
                 self.d_lissage = data[1]
-                self.histo_d = [0]*self.d_lissage
+                # # self.histo_d = [0]*self.d_lissage
                 print("d_lissage reçu dans grande echelle:", self.d_lissage)
 
             elif data[0] == 'x_coeff':
@@ -132,7 +132,7 @@ class GrandeEchelle:
 
             elif data[0] == 'x_lissage':
                 self.x_lissage = data[1]
-                self.histo_x = [0]*self.x_lissage
+                # # self.histo_x = [0]*self.x_lissage
                 print("x_lissage reçu dans grande echelle:", self.x_lissage)
 
             elif data[0] == 'quit':
@@ -153,7 +153,7 @@ class GrandeEchelle:
         del self.histo_x[0]
 
         # Etendue des 20 derniers de l'histo des depth
-        histo_depth_array = np.asarray(self.histo_d)  # [-60:])
+        histo_depth_array = np.asarray(self.histo_d[-20:])
         etendue = np.max(histo_depth_array) - np.min(histo_depth_array)
 
         # Etendue = plage qui détermine si je bouge ou ne bouge pas en mode rapide
@@ -172,7 +172,6 @@ class GrandeEchelle:
 
         # Fonctionnement en mode slow
         if self.block == 1:
-            print(self.x_mode)
             x_liss = int(moving_average(np.array(self.histo_x),
                                         self.x_lissage-2,
                                         type_=self.x_mode))
@@ -190,7 +189,6 @@ class GrandeEchelle:
 
         # Fonctionnement en mode fast self.block = 0
         else:
-            print(self.d_mode)
             depth = int(moving_average(np.array(self.histo_d),
                                         self.d_lissage-2,
                                         type_=self.d_mode))
@@ -229,19 +227,29 @@ class GrandeEchelle:
 
     def draw_text(self, img, frame):
         if self.info:
-            l = [frame, self.profondeur_mini,
-                self.profondeur_maxi, self.d_mode, self.x_mode,
-                self.d_lissage, self.x_coeff, self.etendue, self.x_lissage]
-            text = ""
-            for t in l:
-                text += str(t) + " "
-            cv2.putText(img,  # image
-                        text,
-                        (30, 1000),  # position
-                        cv2.FONT_HERSHEY_SIMPLEX,  # police
-                        2,  # taille police
-                        (0, 255, 0),  # couleur
-                        6)  # épaisseur
+
+            d = {   "Frame": frame,
+                    "Profondeur mini": self.profondeur_mini,
+                    "Profondeur maxi": self.profondeur_maxi,
+                    "X maxi": self.x_maxi,
+                    "D mode": self.d_mode,
+                    "D lissage": self.d_lissage,
+                    "X coeff": self.x_coeff,
+                    "Etendue": self.etendue,
+                    "X mode": self.x_mode,
+                    "X lissage": self.x_lissage}
+            i = 0
+            for key, val in d.items():
+                text = key + " : " + str(val)
+                cv2.putText(img,  # image
+                            text,
+                            (30, 100*i+100),  # position
+                            cv2.FONT_HERSHEY_SIMPLEX,  # police
+                            2,  # taille police
+                            (0, 255, 0),  # couleur
+                            6)  # épaisseur
+                i += 1
+
         return img
 
     def run(self):

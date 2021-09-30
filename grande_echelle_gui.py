@@ -21,6 +21,7 @@ Window.size = WS
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.properties import StringProperty, NumericProperty, BooleanProperty
+from kivy.clock import Clock
 
 from posenet_realsense import posenet_realsense_run
 from grande_echelle import grande_echelle_run
@@ -176,14 +177,27 @@ class Reglage(Screen):
         else:
             self.x_mode = 1
 
-        self.profondeur_mini = int(self.app.config.get('histopocene', 'profondeur_mini'))
-        self.profondeur_maxi = int(self.app.config.get('histopocene', 'profondeur_maxi'))
+        self.profondeur_mini = int(self.app.config.get('histopocene',
+                                                        'profondeur_mini'))
+        self.profondeur_maxi = int(self.app.config.get('histopocene',
+                                                        'profondeur_maxi'))
         self.x_maxi = int(self.app.config.get('histopocene', 'x_maxi'))
         self.d_lissage = int(self.app.config.get('histopocene', 'd_lissage'))
         self.x_coeff = float(self.app.config.get('histopocene', 'x_coeff'))
         self.etendue = int(self.app.config.get('histopocene', 'etendue'))
         self.x_lissage = int(self.app.config.get('histopocene', 'x_lissage'))
         self.info = int(self.app.config.get('histopocene', 'info'))
+
+        Clock.schedule_once(self.set_switch, 0.5)
+
+    def set_switch(self, dt):
+        """Les objets graphiques ne sont pas encore créé pendant le init,
+        il faut lancer cette méthode plus tard
+        """
+        if self.d_mode == 1:
+            self.ids.d_mode.active = 1
+        if self.x_mode == 1:
+            self.ids.x_mode.active = 1
 
     def do_slider(self, iD, instance, value):
 

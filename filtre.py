@@ -61,10 +61,10 @@ if __name__ == '__main__':
 
     print(len(data))  # 824
 
-    for i in range(750):
+    for i in range(270):
         d = []
         for j in range(10):
             d.append(data[i + j])
         d = np.ravel(d)
-        m = moving_average(d, 8, type='simple')
-        # #print(m)
+        m = moving_average(d, 8, type_='simple')
+        print("m", m)

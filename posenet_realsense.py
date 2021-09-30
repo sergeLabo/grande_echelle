@@ -455,7 +455,7 @@ class PosenetRealsense:
             depth = self.perso.depth
             cv2.putText(self.color_arr,  # image
                         str(int(depth)),  # text
-                        (30, 100),  # position
+                        (30, 80),  # position
                         cv2.FONT_HERSHEY_SIMPLEX,  # police
                         3,  # taille police
                         (0, 255, 0),  # couleur
@@ -465,21 +465,40 @@ class PosenetRealsense:
             x = self.perso.x
             cv2.putText(self.color_arr,  # image
                         str(int(x)),  # text
-                        (30, 250),  # position
+                        (30, 180),  # position
                         cv2.FONT_HERSHEY_SIMPLEX,  # police
                         3,  # taille police
                         (0, 255, 0),  # couleur
                         12)  # épaisseur
 
     def draw_text(self):
-        text = "Confiance: " + str(self.threshold)
-        cv2.putText(self.color_arr,  # image
-                    text,
-                    (30, 600),  # position
-                    cv2.FONT_HERSHEY_SIMPLEX,  # police
-                    2,  # taille police
-                    (0, 255, 0),  # couleur
-                    6)  # épaisseur
+        d = {   "Threshold": self.threshold,
+                "Brightness": self.brightness,
+                "Contrast": self.contrast,
+                "Profondeur mini": self.profondeur_mini,
+                "Profondeur maxi": self.profondeur_maxi,
+                "X maxi": self.x_maxi}
+
+        i = 0
+        for key, val in d.items():
+            text = key + " : " + str(val)
+            cv2.putText(self.color_arr,  # image
+                        text,
+                        (30, 80*i+250),  # position
+                        cv2.FONT_HERSHEY_SIMPLEX,  # police
+                        1,  # taille police
+                        (0, 255, 0),  # couleur
+                        2)  # épaisseur
+            i += 1
+
+    def draw_line(self):
+        # Ligne au centre
+        h = self.color_arr.shape[0]
+        w = self.color_arr.shape[1]
+        cv2.line(self.color_arr, (int(w/2), 0),
+                                 (int(w/2), h),
+                                 (255, 255, 255), 2)
+
 
     def set_window(self):
         if self.full_screen:
@@ -531,6 +550,7 @@ class PosenetRealsense:
 
             # Affichage de l'image
             self.draw_text()
+            self.draw_line()
             cv2.imshow('posecolor', self.color_arr)
 
             # Calcul du FPS, affichage toutes les 10 s
