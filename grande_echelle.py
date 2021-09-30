@@ -83,10 +83,12 @@ class GrandeEchelle:
                     # En mm, et dans la plage
                     depth = data[2]
                     depth -= self.profondeur_mini
+                    # si 1800 avec 1200:5000, depth=1800-1200=600
+                    # si 5200, depth=4000, 5000-1200=3800, depth=3800
                     if depth <= 0:
                         depth = 0
                     if depth > self.profondeur_maxi - self.profondeur_mini:
-                        depth = self.profondeur_maxi
+                        depth = self.profondeur_maxi - self.profondeur_mini
 
                     # En mm, entre -2000 et 2000
                     x = data[1]
