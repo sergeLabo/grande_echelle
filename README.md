@@ -48,6 +48,13 @@ Ce lanceur lance un terminal et l'interface graphique. Clic dans la fenêtre de 
 
 Lancer Grande Echelle
 
+### Reset à la version de GitHub
+
+``` bash
+git fetch origin
+git reset --hard origin/master
+```
+
 ### Fichier de configuration
 
 #### Exemple des valeurs par défaut du fichier de config grande_echelle.ini
