@@ -67,7 +67,7 @@ class MainScreen(Screen):
 
         self.titre = "Grande Echelle"
 
-        # # Clock.schedule_once(self.set_run_on, 1.0)
+        Clock.schedule_once(self.set_run_on, 1.0)
 
         print("Initialisation du Screen MainScreen ok")
 

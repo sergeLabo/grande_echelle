@@ -126,6 +126,7 @@
                     id: brightness
                     orientation: 'horizontal'
                     range: -1, 1
+                    step: 0.02
                     value: root.brightness
                     value_position: root.brightness
                     on_value: root.do_slider('brightness', *args)
@@ -146,6 +147,7 @@
                     id: contrast
                     orientation: 'horizontal'
                     range: -1, 1
+                    step: 0.02
                     value: root.contrast
                     value_position: root.contrast
                     on_value: root.do_slider('contrast', *args)
@@ -166,6 +168,7 @@
                     id: threshold
                     orientation: 'horizontal'
                     range: 0.01, 0.99
+                    step: 0.02
                     value: root.threshold
                     value_position: root.threshold
                     on_value: root.do_slider('threshold', *args)
@@ -186,6 +189,7 @@
                     id: profondeur_mini
                     orientation: 'horizontal'
                     range: 500, 2000
+                    step: 30
                     value: root.profondeur_mini
                     value_position: root.profondeur_mini
                     on_value: root.do_slider('profondeur_mini', *args)
@@ -206,6 +210,7 @@
                     id: profondeur_maxi
                     orientation: 'horizontal'
                     range: 3000, 8000
+                    step: 100
                     value: root.profondeur_maxi
                     value_position: root.profondeur_maxi
                     on_value: root.do_slider('profondeur_maxi', *args)
@@ -226,6 +231,7 @@
                     id: x_maxi
                     orientation: 'horizontal'
                     range: 100, 2000
+                    step: 40
                     value: root.x_maxi
                     value_position: root.x_maxi
                     on_value: root.do_slider('x_maxi', *args)
@@ -246,6 +252,7 @@
                     id: etendue
                     orientation: 'horizontal'
                     range: 100, 500
+                    step: 8
                     value: root.etendue
                     value_position: root.etendue
                     on_value: root.do_slider('etendue', *args)
@@ -266,6 +273,7 @@
                     id: d_lissage
                     orientation: 'horizontal'
                     range: 10, 120
+                    step: 2
                     value: root.d_lissage
                     value_position: root.d_lissage
                     on_value: root.do_slider('d_lissage', *args)
@@ -286,6 +294,7 @@
                     id: x_coeff
                     orientation: 'horizontal'
                     range: 0.1, 1
+                    step: 0.02
                     value: root.x_coeff
                     value_position: root.x_coeff
                     on_value: root.do_slider('x_coeff', *args)
@@ -306,6 +315,7 @@
                     id: x_lissage
                     orientation: 'horizontal'
                     range: 10, 120
+                    step: 0.02
                     value: root.x_lissage
                     value_position: root.x_lissage
                     on_value: root.do_slider('x_lissage', *args)
