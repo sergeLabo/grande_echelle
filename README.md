@@ -8,6 +8,7 @@ Les packages python sont installés dans un virtualenv parce que c'est facile, �
 #### RealSense D 455
 ``` bash
 sudo apt-key adv --keyserver keys.gnupg.net --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE || sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
+sudo apt install software-properties-common
 sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo focal main" -u
 sudo apt install librealsense2-dkms
 ```
@@ -44,7 +45,9 @@ python3 -m pip install -r requirements.txt
 ### Excécution
 Copier coller le lanceur grande-echelle.desktop sur le Bureau
 
-Ce lanceur lance un terminal et l'interface graphique. Clic dans la fenêtre de l'interface pour l'activer, puis clic sur 
+Il faut le modifier avec Propriétés: adapter le chemin à votre cas.
+
+Ce lanceur lance un terminal et l'interface graphique. Clic dans la fenêtre de l'interface pour l'activer, puis clic sur
 
 Lancer Grande Echelle
 
