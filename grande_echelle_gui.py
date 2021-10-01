@@ -67,7 +67,14 @@ class MainScreen(Screen):
 
         self.titre = "Grande Echelle"
 
+        # # Clock.schedule_once(self.set_run_on, 1.0)
+
         print("Initialisation du Screen MainScreen ok")
+
+    def set_run_on(self, dt):
+        """Start automatique"""
+        self.ids.run.state = "down"
+        self.run_grande_echelle()
 
     def receive_thread(self):
         t = Thread(target=self.receive)
@@ -495,10 +502,10 @@ class Grande_EchelleApp(App):
                         {   "type": "numeric",
                             "title": "Coefficient de lissage des x ",
                             "desc": "De 10 à 120",
-                            "section": "histopocene", "key": "x_lissage"}
+                            "section": "histopocene", "key": "x_lissage"},
 
                         {   "type": "numeric",
-                            "title": "Affichage du numéro de frame dans histopocene",
+                            "title": "Affichage des infos dans histopocene",
                             "desc": "0 ou 1",
                             "section": "histopocene", "key": "info"}
                    ]"""
