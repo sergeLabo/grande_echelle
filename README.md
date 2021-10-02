@@ -34,11 +34,11 @@ sudo apt install python3-venv
 
 # Installation de l'environnement
 cd /le/dossier/de/grande_echelle/
-# Création du dossier environnement si pas encore créé
+# Création du dossier environnement si pas encore créé, l'argument --system-site-packages permet d'utiliser les packages système où est pycoral
 python3 -m venv --system-site-packages mon_env
 # Activation
 source mon_env/bin/activate
-# Installation des packages
+# Installation des packages, numpy, opencv-python, pyrealsense2, kivy
 python3 -m pip install -r requirements.txt
 ```
 
@@ -47,9 +47,7 @@ Copier coller le lanceur grande-echelle.desktop sur le Bureau
 
 Il faut le modifier avec Propriétés: adapter le chemin à votre cas.
 
-Ce lanceur lance un terminal et l'interface graphique. Clic dans la fenêtre de l'interface pour l'activer, puis clic sur
-
-Lancer Grande Echelle
+Ce lanceur lance un terminal et l'interface graphique, en autorun.
 
 ### Reset à la version de GitHub
 
@@ -99,17 +97,17 @@ info = 0
 * brightness et contrast: régler au centre de la plage de bonne détection
 * threshold = 80 seuil de confiance de la détection, plus c'est grand moins il y a d'erreur, mais plus la détection est difficile.
 * around = 1 nombre de pixels autour de la détection pour calcul moyenné de la profondeur, 1 à 3 mais ne change rien
-* frame_rate_du_film = 25 Créer le film avec cette valeur !
+* frame_rate_du_film = 50, ne pas le modifier
 * film = 'ge_1920_25_moy.mp4' 1920x1080, 25 fps!
-* d_lissage = 30 lissage de la profondeur en mode rapide
+* d_lissage = 80 lissage de la profondeur
 * d_mode = 'exponentiel' pour le calcul de la moyenne glissante, réagit plus vite
 * profondeur_mini = 1200, cale le 0 de la profondeur
 * profondeur_maxi = 4000, limite le maxi
 * x_maxi = 1500, limite la plage des x
-* x_coeff = 0.2, pourcentage d'influence des x en mode lent
-* etendue = 200, plage de variation de la profondeur, au dessus utilisation de la profondeur, en dessous utilisation des x
-* x_lissage = 50, lissage des x en mode lent, pour le calcul de la moyenne glissante
-* x_mode = 'simple', calcul de la moyenne glissante sans pondération
+* x_coeff = 0.2, pourcentage d'influence des x en mode lent, n'est plus utilisé.
+* etendue = 200, plage de variation de la profondeur, au dessus utilisation de la profondeur, en dessous utilisation des x, n'est plus utilisé.
+* x_lissage = 50, lissage des x en mode lent, pour le calcul de la moyenne glissante, n'est plus utilisé.
+* x_mode = 'simple', calcul de la moyenne glissante sans pondération, n'est plus utilisé.
 
 
 ### LICENSE
