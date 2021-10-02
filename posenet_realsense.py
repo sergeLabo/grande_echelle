@@ -344,45 +344,50 @@ class PosenetRealsense:
         # (x, z) est le centre en vue de dessus,
         # all_x_z est la liste de tous les centres
         all_x_z = []
+        all_x_sorted = []
 
         if persos_3D:
-            for perso in persos_3D:
+            for p, perso in enumerate(persos_3D):
                 # Le x est la 1ère valeur, le z la 3ème
-                # # if perso:
+                if perso:
                     x = get_moyenne(perso, 0)
                     z = get_moyenne(perso, 2)
                     if x and z:
-                        all_x_z.append([x, z])
+                        all_x_z.append([p, int(x), int(z)])
                     else:
-                        all_x_z.append([100000, 100000])
+                        all_x_z.append([p, 100000, 100000])
 
-        # [[200, 5000], [500, 3000]]
+        # perso3D = [[bon], [17*None], [bon], None]
+        # [[0, 200, 5000], [2, 500, 3000]
         # Je ne garde que ceux devant profondeur_maxi, derrière le mini,
         # et dans la plage des x
         all_x = []  # tous les x valides
-        for x0, z0 in all_x_z:
+        all_p = []  # index des x valides dans persos_3D
+        for n, x0, z0 in all_x_z:
             if self.profondeur_mini < z0 < self.profondeur_maxi\
                     and -self.x_maxi < x0 < self.x_maxi:
                 all_x.append(abs(x0))
+                all_p.append(n)
 
         if all_x:
             all_x_sorted = sorted(all_x)
-            who = all_x.index(all_x_sorted[0])
+            ind = all_x.index(all_x_sorted[0])
+            who = all_p[ind]
 
-        if 1:
-            print(persos_3D)
-            print("len(persos_3D)", len(persos_3D), "all_x_z", all_x_z,
-                    "len(all_x_z)", all_x_z, "all_x", all_x,
-                    "len(all_x)", all_x, "all_x_sorted", all_x_sorted,
-                    "len(all_x_sorted)", len(all_x_sorted), "who", who)
         return who
 
     def get_persos_3D(self, persos_2D):
-        """Coordonnées 3D avec les 2D de toutes les détections"""
-        persos_3D = []
+        """Coordonnées 3D avec les 2D de toutes les détections
+        Suppression des faux persos à [None]*17
+        """
+        persos_3D0 = []
         for xys in persos_2D:
             pts = self.get_points_3D(xys)
-            persos_3D.append(pts)
+            persos_3D0.append(pts)
+
+        # Suppression des faux persos
+        persos_3D = [x for x in persos_3D0 if x != [None]*17]
+
         return persos_3D
 
     def get_points_3D(self, xys):

@@ -89,7 +89,7 @@ class GrandeEchelle:
                         depth = 0
                     if depth > self.profondeur_maxi - self.profondeur_mini:
                         depth = self.profondeur_maxi - self.profondeur_mini
-
+                    # #print(depth)
                     # En mm, entre -2000 et 2000
                     x = data[1]
                     # Utilisation de la surface de beaucoup de cm2
@@ -145,7 +145,9 @@ class GrandeEchelle:
             sleep(0.001)
 
     def get_frame_slow(self, depth, x):
-        """ Appelé à chaque frame"""
+        """ Appelé à chaque frame, version sans les x,
+        uniquement la profondeur
+        """
 
         # Mise à jour des piles
         self.histo_d.append(depth)
@@ -154,68 +156,15 @@ class GrandeEchelle:
         self.histo_x.append(x)
         del self.histo_x[0]
 
-        # Etendue des 20 derniers de l'histo des depth
-        histo_depth_array = np.asarray(self.histo_d[-20:])
-        etendue = np.max(histo_depth_array) - np.min(histo_depth_array)
-
-        # Etendue = plage qui détermine si je bouge ou ne bouge pas en mode rapide
-        if etendue > self.etendue:
-            # Pas de blockage
-            # self.depth_fixe sert pour le mode slow
-            self.depth_fixe = self.get_frame_fast(depth)
-            if self.block == 1:
-                # Changement de phase
-                self.block = 0
-                # reset de la pile à la valeur actuelle
-                self.histo_d = [depth]*self.d_lissage
-        else:
-            if self.block == 0:
-                self.block = 1
-
-        # Fonctionnement en mode slow
-        if self.block == 1:
-            x_liss = int(moving_average(np.array(self.histo_x),
-                                        self.x_lissage-2,
-                                        type_=self.x_mode))
-
-            # Influence de x
-            x_cor = int(x_liss  * self.x_coeff)
-
-            # Combinaison depth et x et sens
-            depth_and_x = self.depth_fixe + x_cor
-
-            # Conversion en frame
-            plage = self.profondeur_maxi - self.profondeur_mini
-            frame = int(depth_and_x * self.lenght/plage)
-            self.frame = frame
-
-        # Fonctionnement en mode fast self.block = 0
-        else:
+        try:
             depth = int(moving_average(np.array(self.histo_d),
                                         self.d_lissage-2,
                                         type_=self.d_mode))
-            plage = self.profondeur_maxi - self.profondeur_mini
-            frame = int(depth * self.lenght/plage)
-            self.frame = frame
-
-    def get_frame_fast(self, depth):
-        """Calcule la frame avec la profondeur pour le mode rapide,
-        définir self.frame suffit pour être appliqué,
-        le retour sert en mode slow
-        """
-
-        # Pour le mode slow
-        depth_liss = int(moving_average(np.array(self.histo_d),
-                                        self.d_lissage-2,
-                                        type_=self.d_mode))
-
-        # Conversion de la profondeur en frame
+        except:
+            print("Erreur moving_average depth")
         plage = self.profondeur_maxi - self.profondeur_mini
-        frame = int(depth_liss * self.lenght / plage)
+        frame = int(depth * self.lenght/plage)
         self.frame = frame
-
-        # retour pour mode avec x
-        return depth_liss
 
     def set_window(self):
         if self.full_screen:
@@ -289,12 +238,6 @@ class GrandeEchelle:
         self.video.release()
         cv2.destroyAllWindows()
 
-
-
-def get_a_b(x_min, x_max, y_min, y_max):
-    a = (y_min - y_max) / (x_min - x_max)
-    b = y_min - (a * x_min)
-    return a, b
 
 
 def grande_echelle_run(conn, current_dir, config):
