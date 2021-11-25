@@ -2,3 +2,4 @@ numpy
 opencv-python
 pyrealsense2
 kivy
+pynput

@@ -11,6 +11,8 @@ from threading import Thread
 import cv2
 import numpy as np
 
+from pynput.mouse import Button, Controller
+
 from filtre import moving_average
 from my_config import MyConfig
 
@@ -64,6 +66,7 @@ class GrandeEchelle:
         self.histo_d = [0]*self.d_lissage
         self.histo_x = [0]*self.x_lissage
 
+        self.mouse = Controller()
         self.create_window()
 
     def create_window(self):
@@ -167,10 +170,16 @@ class GrandeEchelle:
         self.frame = frame
 
     def set_window(self):
+        """ from pynput.mouse import Button, Controller
+            mouse = Controller()
+            mouse.position = (50,60)
+        """
         if self.full_screen:
             cv2.setWindowProperty(  'histopocene',
                                     cv2.WND_PROP_FULLSCREEN,
                                     cv2.WINDOW_FULLSCREEN)
+            x, y, w, h = cv2.getWindowImageRect('histopocene')
+            self.mouse.position = (w, h)
         else:
             cv2.setWindowProperty(  'histopocene',
                                     cv2.WND_PROP_FULLSCREEN,
@@ -244,5 +253,3 @@ def grande_echelle_run(conn, current_dir, config):
 
     ge = GrandeEchelle(conn, current_dir, config)
     ge.run()
-
-
