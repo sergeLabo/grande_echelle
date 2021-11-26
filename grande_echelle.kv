@@ -81,30 +81,27 @@
             orientation: 'horizontal'
             BoxLayout: # une boite pour switch
                 size_hint_x: 0.4
-
                 BoxLayout:
                     orientation: 'vertical'
-                    BoxLayout: # d_mode
+                    BoxLayout: # mode expo
                         orientation: 'vertical'
+                        size_hint_y: 0.25
                         Label:
-                            text: 'Lissage\nexponentiel\n de la\nprofondeur'
+                            text: 'Mode Expo'
                         Switch:
-                            id: d_mode
-                            on_active: root.on_switch_d_mode(*args)
-                    BoxLayout: # x_mode
-                        orientation: 'vertical'
-                        Label:
-                            text: 'Lissage\nexponentiel\ndes x'
-                        Switch:
-                            id: x_mode
-                            on_active: root.on_switch_x_mode(*args)
+                            id: mode_expo
+                            on_active: root.on_switch_mode_expo(*args)
                     BoxLayout: # info
                         orientation: 'vertical'
+                        size_hint_y: 0.25
                         Label:
-                            text: 'Info dans Histopocene'
+                            text: 'Affichage\ndes Infos'
                         Switch:
                             id: info
                             on_active: root.on_switch_info(*args)
+                    BoxLayout: # info
+                        orientation: 'vertical'
+                        size_hint_y: 0.5
 
             BoxLayout: # une boite pour slider
                 orientation: 'vertical'
@@ -235,90 +232,6 @@
                     value: root.x_maxi
                     value_position: root.x_maxi
                     on_value: root.do_slider('x_maxi', *args)
-
-                BoxLayout: # une boite texte et affichage etendue
-                    size_hint_y: 0.10
-                    orientation: 'horizontal'
-                    Label:  # etendue
-                        text: 'Etendue'
-                        font_size: '24dp'
-                        color: (0.5, 0.5, 0, 1)
-                    Label:
-                        text: str(root.etendue)
-                        font_size: '24dp'
-                        color: (0.5, 0.5, 0, 1)
-                Slider:  # etendue
-                    size_hint_y: 0.10
-                    id: etendue
-                    orientation: 'horizontal'
-                    range: 100, 500
-                    step: 8
-                    value: root.etendue
-                    value_position: root.etendue
-                    on_value: root.do_slider('etendue', *args)
-
-                BoxLayout: # une boite texte et affichage d_lissage
-                    size_hint_y: 0.10
-                    orientation: 'horizontal'
-                    Label:  # d_lissage
-                        text: 'Lissage de la profondeur'
-                        font_size: '24dp'
-                        color: (0.5, 0.5, 0, 1)
-                    Label:
-                        text: str(root.d_lissage)
-                        font_size: '24dp'
-                        color: (0.5, 0.5, 0, 1)
-                Slider:  # d_lissage
-                    size_hint_y: 0.10
-                    id: d_lissage
-                    orientation: 'horizontal'
-                    range: 10, 120
-                    step: 2
-                    value: root.d_lissage
-                    value_position: root.d_lissage
-                    on_value: root.do_slider('d_lissage', *args)
-
-                BoxLayout: # une boite texte et affichage x_coeff
-                    size_hint_y: 0.10
-                    orientation: 'horizontal'
-                    Label:  # x_coeff
-                        text: 'Coefficient sur x'
-                        font_size: '24dp'
-                        color: (0.5, 0.5, 0, 1)
-                    Label:
-                        text: str(root.x_coeff)
-                        font_size: '24dp'
-                        color: (0.5, 0.5, 0, 1)
-                Slider:  # x_coeff
-                    size_hint_y: 0.10
-                    id: x_coeff
-                    orientation: 'horizontal'
-                    range: 0.1, 1
-                    step: 0.02
-                    value: root.x_coeff
-                    value_position: root.x_coeff
-                    on_value: root.do_slider('x_coeff', *args)
-
-                BoxLayout: # une boite texte et affichage x_lissage
-                    size_hint_y: 0.10
-                    orientation: 'horizontal'
-                    Label:  # x_lissage
-                        text: 'Lissage des x'
-                        font_size: '24dp'
-                        color: (0.5, 0.5, 0, 1)
-                    Label:
-                        text: str(root.x_lissage)
-                        font_size: '24dp'
-                        color: (0.5, 0.5, 0, 1)
-                Slider:  # x_lissage
-                    size_hint_y: 0.10
-                    id: x_lissage
-                    orientation: 'horizontal'
-                    range: 10, 120
-                    step: 0.02
-                    value: root.x_lissage
-                    value_position: root.x_lissage
-                    on_value: root.do_slider('x_lissage', *args)
 
         BoxLayout: # une boite pour espacer
             orientation: 'horizontal'

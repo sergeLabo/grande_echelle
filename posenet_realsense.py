@@ -164,6 +164,7 @@ class PosenetRealsense:
         self.profondeur_maxi = int(self.config['histopocene']['profondeur_maxi'])
         self.profondeur_mini = int(self.config['histopocene']['profondeur_mini'])
         self.x_maxi = int(self.config['histopocene']['x_maxi'])
+        self.mode_expo = int(self.config['histopocene']['mode_expo'])
 
         self.set_pipeline()
         self.get_engine()
@@ -176,8 +177,6 @@ class PosenetRealsense:
     def create_window(self):
         # fullscreen property (can be WINDOW_NORMAL or WINDOW_FULLSCREEN)
         cv2.namedWindow('posecolor', cv2.WND_PROP_FULLSCREEN)
-        # Plein écran de la fenêtre OpenCV
-        self.full_screen = 0
 
     def get_engine(self):
         """Crée le moteur de calcul avec le stick Coral"""
@@ -213,8 +212,9 @@ class PosenetRealsense:
                                         mirror=False)
         except:
             print(f"Pas de Stick Coral connecté.")
-            self.conn.send(['quit', 1])
-            sleep(0.1)
+            # # if self.conn:
+                # # self.conn.send(['quit', 1])
+            sleep(100)
             os._exit(0)
 
     def set_pipeline(self):
@@ -227,9 +227,9 @@ class PosenetRealsense:
             pipeline_profile = config.resolve(pipeline_wrapper)
         except:
             print(f"Pas de Capteur Realsense connecté")
-            if self.conn:
-                self.conn.send(['quit', 1])
-            sleep(0.1)
+            # # if self.conn:
+                # # self.conn.send(['quit', 1])
+            sleep(100)
             os._exit(0)
 
         device = pipeline_profile.get_device()
@@ -289,6 +289,9 @@ class PosenetRealsense:
                     print('x_maxi reçu dans posenet:', data[1])
                     self.x_maxi = data[1]
 
+                elif data[0] == 'mode_expo':
+                    print('mode_expo reçu dans posenet:', data[1])
+                    self.mode_expo = data[1]
 
             sleep(0.001)
 
@@ -309,33 +312,6 @@ class PosenetRealsense:
 
         # Apply who, pour le personnage vert et les rouges
         self.apply_who(who, persos_2D, persos_3D)
-
-    def apply_who(self, who, persos_2D, persos_3D):
-        """Apply who pour le personnage vert et les rouges
-        Le vert est self.perso, les autres sont dans self.perso_bad
-        """
-
-        # Application à perso pour définir le vert
-        if who is not None:
-            self.perso.who = who
-            self.perso.xys = persos_2D[who]
-            self.perso.points_3D = persos_3D[who]
-            # 2 est la profondeur en z
-            self.perso.depth = get_moyenne(persos_3D[who], 2)
-            # 0 est le x, 1 le y
-            self.perso.x = get_moyenne(persos_3D[who], 0)
-
-        # Affichage du personnage vert
-        if self.perso.who is not None:
-            self.draw_pose(self.color_arr, self.perso.xys, color=[0, 255, 0])
-
-        # Affichage de la profondeur et de x du perso vert
-        self.draw_depth_values()
-
-        # Affichage des autres personnages, persos_2D=liste de dict
-        for p, xys in enumerate(persos_2D):
-            if p != who:
-                self.draw_pose(self.color_arr, xys, color=[0, 0, 255])
 
     def get_who(self, persos_3D):
         """who est l'indice du personnage vert, dans la liste des perso 3D"""
@@ -364,10 +340,10 @@ class PosenetRealsense:
         all_x = []  # tous les x valides
         all_p = []  # index des x valides dans persos_3D
         for n, x0, z0 in all_x_z:
-            if self.profondeur_mini < z0 < self.profondeur_maxi\
-                    and -self.x_maxi < x0 < self.x_maxi:
-                all_x.append(abs(x0))
-                all_p.append(n)
+            if self.profondeur_mini - 1000 < z0 < self.profondeur_maxi + 500:
+                if -self.x_maxi < x0 < self.x_maxi:
+                    all_x.append(abs(x0))
+                    all_p.append(n)
 
         if all_x:
             all_x_sorted = sorted(all_x)
@@ -375,6 +351,33 @@ class PosenetRealsense:
             who = all_p[ind]
 
         return who
+
+    def apply_who(self, who, persos_2D, persos_3D):
+        """Apply who pour le personnage vert et les rouges
+        Le vert est self.perso, les autres sont dans self.perso_bad
+        """
+
+        # Application à perso pour définir le vert
+        if who is not None:
+            self.perso.who = who
+            self.perso.xys = persos_2D[who]
+            self.perso.points_3D = persos_3D[who]
+            # 2 est la profondeur en z
+            self.perso.depth = get_moyenne(persos_3D[who], 2)
+            # 0 est le x, 1 le y
+            self.perso.x = get_moyenne(persos_3D[who], 0)
+
+        # Affichage du personnage vert
+        if self.perso.who is not None:
+            self.draw_pose(self.color_arr, self.perso.xys, color=[0, 255, 0])
+
+        # Affichage de la profondeur et de x du perso vert
+        self.draw_depth_values()
+
+        # Affichage des autres personnages, persos_2D=liste de dict
+        for p, xys in enumerate(persos_2D):
+            if p != who:
+                self.draw_pose(self.color_arr, xys, color=[0, 0, 255])
 
     def get_persos_3D(self, persos_2D):
         """Coordonnées 3D avec les 2D de toutes les détections
@@ -512,7 +515,6 @@ class PosenetRealsense:
                                  (int(w/2), h),
                                  (255, 255, 255), 2)
 
-
     def set_window(self):
         if self.full_screen:
             cv2.setWindowProperty(  'posecolor',
@@ -525,8 +527,7 @@ class PosenetRealsense:
 
     def send(self):
         if self.conn and self.perso.x and self.perso.depth:
-            self.conn.send(['from_realsense', int(self.perso.x),
-                                              int(self.perso.depth)])
+            self.conn.send(['from_realsense', int(self.perso.depth)])
 
     def run(self):
         """Boucle infinie, quitter avec Echap dans la fenêtre OpenCV"""
@@ -562,9 +563,10 @@ class PosenetRealsense:
             self.send()
 
             # Affichage de l'image
-            self.draw_text()
-            self.draw_line()
-            cv2.imshow('posecolor', self.color_arr)
+            if not self.mode_expo:
+                self.draw_text()
+                self.draw_line()
+                cv2.imshow('posecolor', self.color_arr)
 
             # Calcul du FPS, affichage toutes les 10 s
             if time() - t0 > 10:
@@ -574,11 +576,12 @@ class PosenetRealsense:
             k = cv2.waitKey(1)
             # Space pour full screen or not
             if k == 32:  # space
-                if self.full_screen == 1:
-                    self.full_screen = 0
-                elif self.full_screen == 0:
-                    self.full_screen = 1
-                self.set_window()
+                if not self.mode_expo:
+                    if self.full_screen == 1:
+                        self.full_screen = 0
+                    elif self.full_screen == 0:
+                        self.full_screen = 1
+                    self.set_window()
             # Esc to  exit
             if k == 27:
                 self.conn.send(['quit', 1])
@@ -655,6 +658,3 @@ def posenet_realsense_run(conn, current_dir, config):
 
     pnrs = PosenetRealsense(conn, current_dir, config)
     pnrs.run()
-
-
-

@@ -51,26 +51,28 @@ class GrandeEchelle:
         self.profondeur_mini = int(self.config['histopocene']['profondeur_mini'])
         self.profondeur_maxi = int(self.config['histopocene']['profondeur_maxi'])
         self.x_maxi = int(self.config['histopocene']['x_maxi'])
-        self.x_coeff = float(self.config['histopocene']['x_coeff'])
-        self.etendue = int(self.config['histopocene']['etendue'])
+        # # self.x_coeff = float(self.config['histopocene']['x_coeff'])
+        # # self.etendue = int(self.config['histopocene']['etendue'])
         self.d_lissage = int(self.config['histopocene']['d_lissage'])
-        self.d_mode = self.config['histopocene']['d_mode']
-        self.x_lissage = int(self.config['histopocene']['x_lissage'])
-        self.x_mode = self.config['histopocene']['x_mode']
+        # # self.d_mode = self.config['histopocene']['d_mode']
+        # # self.x_lissage = int(self.config['histopocene']['x_lissage'])
+        # # self.x_mode = self.config['histopocene']['x_mode']
+        self.info = self.config['histopocene']['info']
+        self.mode_expo = self.config['histopocene']['mode_expo']
+        if self.mode_expo:
+            self.info = 0
+            self.full_screen = 1
 
-        self.info = 0
         self.block = 0
         self.depth_fixe = 0
-        # Image fixe si pas de capture à - 2 millions
-        self.frame = 1
+        # Image fixe si pas de capture a la fin du film
+        self.frame = 0
         self.histo_d = [0]*self.d_lissage
-        self.histo_x = [0]*self.x_lissage
 
         self.mouse = Controller()
         self.create_window()
 
     def create_window(self):
-        self.full_screen = 0
         cv2.namedWindow('histopocene', cv2.WND_PROP_FULLSCREEN)
 
     def receive_thread(self):
@@ -81,22 +83,9 @@ class GrandeEchelle:
         while self.conn_loop:
             data = self.conn.recv()
             self.conn.send(['bidon', 0])
-            if data[0] == 'depth_x':
-                if data[1] and data[2]:
-                    # En mm, et dans la plage
-                    depth = data[2]
-                    depth -= self.profondeur_mini
-                    # si 1800 avec 1200:5000, depth=1800-1200=600
-                    # si 5200, depth=4000, 5000-1200=3800, depth=3800
-                    if depth <= 0:
-                        depth = 0
-                    if depth > self.profondeur_maxi - self.profondeur_mini:
-                        depth = self.profondeur_maxi - self.profondeur_mini
-                    # #print(depth)
-                    # En mm, entre -2000 et 2000
-                    x = data[1]
-                    # Utilisation de la surface de beaucoup de cm2
-                    self.get_frame_slow(depth, x)
+            if data[0] == 'depth':
+                if data[1]:
+                    self.get_frame(data[1])
 
             elif data[0] == 'info':
                 self.info = data[1]
@@ -114,31 +103,36 @@ class GrandeEchelle:
                 self.x_maxi = data[1]
                 print("x_maxi reçu dans grande echelle:", self.x_maxi)
 
-            elif data[0] == 'd_mode':
-                self.d_mode = data[1]
-                print("d_mode reçu dans grande echelle:", self.d_mode)
+            elif data[0] == 'mode_expo':
+                self.mode_expo = data[1]
+                print("info reçu dans grande echelle:", self.mode_expo)
+                if self.mode_expo:
+                    self.info = 0
 
-            elif data[0] == 'x_mode':
-                self.x_mode = data[1]
-                print("x_mode reçu dans grande echelle:", self.x_mode)
+            # # elif data[0] == 'd_mode':
+                # # self.d_mode = data[1]
+                # # print("d_mode reçu dans grande echelle:", self.d_mode)
+
+            # # elif data[0] == 'x_mode':
+                # # self.x_mode = data[1]
+                # # print("x_mode reçu dans grande echelle:", self.x_mode)
 
             elif data[0] == 'd_lissage':
                 self.d_lissage = data[1]
-                # # self.histo_d = [0]*self.d_lissage
                 print("d_lissage reçu dans grande echelle:", self.d_lissage)
 
-            elif data[0] == 'x_coeff':
-                self.x_coeff = data[1]
-                print("x_coeff reçu dans grande echelle:", self.x_coeff)
+            # # elif data[0] == 'x_coeff':
+                # # self.x_coeff = data[1]
+                # # print("x_coeff reçu dans grande echelle:", self.x_coeff)
 
-            elif data[0] == 'etendue':
-                self.etendue = data[1]
-                print("etendue reçu dans grande echelle:", self.etendue)
+            # # elif data[0] == 'etendue':
+                # # self.etendue = data[1]
+                # # print("etendue reçu dans grande echelle:", self.etendue)
 
-            elif data[0] == 'x_lissage':
-                self.x_lissage = data[1]
-                # # self.histo_x = [0]*self.x_lissage
-                print("x_lissage reçu dans grande echelle:", self.x_lissage)
+            # # elif data[0] == 'x_lissage':
+                # # self.x_lissage = data[1]
+                # ## self.histo_x = [0]*self.x_lissage
+                # # print("x_lissage reçu dans grande echelle:", self.x_lissage)
 
             elif data[0] == 'quit':
                 self.loop = 0
@@ -147,26 +141,52 @@ class GrandeEchelle:
 
             sleep(0.001)
 
-    def get_frame_slow(self, depth, x):
-        """ Appelé à chaque frame, version sans les x,
-        uniquement la profondeur
-        """
+    def get_frame(self, depth):
+        """ Appelé à chaque frame"""
 
-        # Mise à jour des piles
+        # En mm, et dans la plage
+        # # depth -= self.profondeur_mini
+        # si 1800 avec 1200:5000, depth=1800-1200=600
+        # si 5200, depth=4000, 5000-1200=3800, depth=3800
+        # # if depth <= 0:
+            # # depth = 0
+        # # if depth > self.profondeur_maxi - self.profondeur_mini:
+            # # depth = self.profondeur_maxi - self.profondeur_mini
+
+        # Mise à jour de la pile
         self.histo_d.append(depth)
         del self.histo_d[0]
-
-        self.histo_x.append(x)
-        del self.histo_x[0]
 
         try:
             depth = int(moving_average(np.array(self.histo_d),
                                         self.d_lissage-2,
-                                        type_=self.d_mode))
+                                        type_='simple'))
         except:
             print("Erreur moving_average depth")
-        plage = self.profondeur_maxi - self.profondeur_mini
-        frame = int(depth * self.lenght/plage)
+
+        # # plage = self.profondeur_maxi - self.profondeur_mini
+        # # frame = int(depth * self.lenght/plage)
+
+        # Pour bien comprendre
+        mini = self.profondeur_mini
+        maxi = self.profondeur_maxi
+        lenght = self.lenght
+
+        # 37000 <--> 5000=maxi
+        #     0 <--> 2000=mini
+        # depth varie de 1000 à 5500
+        a = lenght/(maxi - mini)
+        b = -a * mini
+        frame = a*depth + b
+
+        # Inversion de la video
+        frame = self.lenght - frame
+        # Pour ne jamais planté
+        if frame < 1:
+            frame = 1
+        if frame > self.lenght:
+            frame = self.lenght
+
         self.frame = frame
 
     def set_window(self):
@@ -187,23 +207,17 @@ class GrandeEchelle:
 
     def draw_text(self, img, frame):
         if self.info:
-
             d = {   "Frame": frame,
                     "Profondeur mini": self.profondeur_mini,
                     "Profondeur maxi": self.profondeur_maxi,
                     "X maxi": self.x_maxi,
-                    "D mode": self.d_mode,
-                    "D lissage": self.d_lissage,
-                    "X coeff": self.x_coeff,
-                    "Etendue": self.etendue,
-                    "X mode": self.x_mode,
-                    "X lissage": self.x_lissage}
+                    "D lissage": self.d_lissage}
             i = 0
             for key, val in d.items():
                 text = key + " : " + str(val)
                 cv2.putText(img,  # image
                             text,
-                            (30, 100*i+100),  # position
+                            (30, 150*i+400),  # position
                             cv2.FONT_HERSHEY_SIMPLEX,  # police
                             2,  # taille police
                             (0, 255, 0),  # couleur
@@ -216,29 +230,29 @@ class GrandeEchelle:
         """Boucle infinie du script"""
 
         while self.loop:
-            # Inversion de la video
-            frame = self.lenght - self.frame
-            # Pour ne jamais planté
-            if frame < 1:
-                frame = 1
-            if frame > self.lenght:
-                frame = self.lenght
 
-            self.video.set(cv2.CAP_PROP_POS_FRAMES, frame)
+            self.video.set(cv2.CAP_PROP_POS_FRAMES, self.frame)
             ret, img = self.video.read()
 
+            if self.mode_expo:
+                self.info = 0
+                self.full_screen = 1
+                self.set_window()
+
             if ret:
-                img = self.draw_text(img, frame)
+                if self.info:
+                    img = self.draw_text(img, self.frame)
                 cv2.imshow('histopocene', img)
 
             k = cv2.waitKey(self.tempo)
             # Space pour full screen or not
             if k == 32:  # space
-                if self.full_screen == 1:
-                    self.full_screen = 0
-                elif self.full_screen == 0:
-                    self.full_screen = 1
-                self.set_window()
+                if not self.mode_expo:
+                    if self.full_screen == 1:
+                        self.full_screen = 0
+                    elif self.full_screen == 0:
+                        self.full_screen = 1
+                    self.set_window()
             # Esc to  exit
             if k == 27:
                 self.conn.send(['quit', 1])
