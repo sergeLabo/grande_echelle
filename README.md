@@ -66,23 +66,19 @@ width_input = 1280
 height_input = 720
 
 [pose]
-brightness = 0.05
-contrast = 0.13
-threshold = 0.8
+brightness = 0.0
+contrast = 0.0
+threshold = 0.71
 around = 1
 
 [histopocene]
 frame_rate_du_film = 25
-film = ge_1920_25_moy.mp4
-profondeur_mini = 1000
-profondeur_maxi = 3800
-x_maxi = 230
-d_mode = exponentiel
-x_mode = simple
-d_lissage = 100
-x_coeff = 0.2
-etendue = 200
-x_lissage = 50
+film = ICOS.mp4
+profondeur_mini = 2000
+profondeur_maxi = 5000
+x_maxi = 1000
+d_lissage = 50
+mode_expo = 1
 info = 0
 ```
 
@@ -90,7 +86,7 @@ info = 0
 * Bascule full_screen en cours en activant la fenêtre à aggrandir puis:
     * espace
 * Options permet de modifier tous les paramètres mais il faut relancer l'application pour les paramètres non modifiables à chaud
-
+* En mode expo, démarrage directement en full screen sur le film, pas d'info, pas d'image de capture
 
 #### Explications sur les  paramètres
 
@@ -98,17 +94,11 @@ info = 0
 * threshold = 80 seuil de confiance de la détection, plus c'est grand moins il y a d'erreur, mais plus la détection est difficile.
 * around = 1 nombre de pixels autour de la détection pour calcul moyenné de la profondeur, 1 à 3 mais ne change rien
 * frame_rate_du_film = 50, ne pas le modifier
-* film = 'ge_1920_25_moy.mp4' 1920x1080, 25 fps!
+* film = 'ICOS.mp4' 1920x1080, 25 fps!
 * d_lissage = 80 lissage de la profondeur
-* d_mode = 'exponentiel' pour le calcul de la moyenne glissante, réagit plus vite
 * profondeur_mini = 1200, cale le 0 de la profondeur
 * profondeur_maxi = 4000, limite le maxi
 * x_maxi = 1500, limite la plage des x
-* x_coeff = 0.2, pourcentage d'influence des x en mode lent, n'est plus utilisé.
-* etendue = 200, plage de variation de la profondeur, au dessus utilisation de la profondeur, en dessous utilisation des x, n'est plus utilisé.
-* x_lissage = 50, lissage des x en mode lent, pour le calcul de la moyenne glissante, n'est plus utilisé.
-* x_mode = 'simple', calcul de la moyenne glissante sans pondération, n'est plus utilisé.
-
 
 ### LICENSE
 
