@@ -164,6 +164,7 @@ class PosenetRealsense:
         self.profondeur_maxi = int(self.config['histopocene']['profondeur_maxi'])
         self.profondeur_mini = int(self.config['histopocene']['profondeur_mini'])
         self.x_maxi = int(self.config['histopocene']['x_maxi'])
+        self.full_screen = int(self.config['histopocene']['full_screen'])
         self.mode_expo = int(self.config['histopocene']['mode_expo'])
 
         self.set_pipeline()
@@ -175,8 +176,8 @@ class PosenetRealsense:
         self.create_window()
 
     def create_window(self):
-        # fullscreen property (can be WINDOW_NORMAL or WINDOW_FULLSCREEN)
-        cv2.namedWindow('posecolor', cv2.WND_PROP_FULLSCREEN)
+        if not self.mode_expo:
+            cv2.namedWindow('posecolor', cv2.WND_PROP_FULLSCREEN)
 
     def get_engine(self):
         """Crée le moteur de calcul avec le stick Coral"""
@@ -212,9 +213,9 @@ class PosenetRealsense:
                                         mirror=False)
         except:
             print(f"Pas de Stick Coral connecté.")
-            # # if self.conn:
-                # # self.conn.send(['quit', 1])
-            sleep(100)
+            if self.conn:
+                self.conn.send(['quit', 1])
+            sleep(0.100)
             os._exit(0)
 
     def set_pipeline(self):
@@ -227,9 +228,9 @@ class PosenetRealsense:
             pipeline_profile = config.resolve(pipeline_wrapper)
         except:
             print(f"Pas de Capteur Realsense connecté")
-            # # if self.conn:
-                # # self.conn.send(['quit', 1])
-            sleep(100)
+            if self.conn:
+                self.conn.send(['quit', 1])
+            sleep(0.100)
             os._exit(0)
 
         device = pipeline_profile.get_device()

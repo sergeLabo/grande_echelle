@@ -50,12 +50,7 @@ class MainScreen(Screen):
         # [histopocene]
         self.profondeur_mini = 1500
         self.profondeur_maxi = 4000
-        # # self.d_mode = 0
-        # # self.x_mode = 0
         self.d_lissage = 44
-        # # self.x_coeff = 0.19
-        # # self.etendue = 200
-        # # self.x_lissage = 27
         self.mode_expo = 0
 
         # Pour le Pipe
@@ -142,11 +137,7 @@ class Reglage(Screen):
     profondeur_maxi = NumericProperty(4000)
     x_maxi = NumericProperty(500)
     d_lissage = NumericProperty(50)
-    # # x_coeff = NumericProperty(0.20)
-    # # etendue = NumericProperty(200)
-    # # x_lissage = NumericProperty(25)
     d_mode = NumericProperty(0)
-    # # x_mode = NumericProperty(0)
     info = NumericProperty(0)
     mode_expo = NumericProperty(0)
 
@@ -159,25 +150,12 @@ class Reglage(Screen):
         self.contrast = float(self.app.config.get('pose', 'contrast'))
         self.threshold = float(self.app.config.get('pose', 'threshold'))
         self.around = int(self.app.config.get('pose', 'around'))
-
-        # # if self.app.config.get('histopocene', 'd_mode') == 'simple':
-            # # self.d_mode = 0
-        # # else:
-            # # self.d_mode = 1
-        # # if self.app.config.get('histopocene', 'x_mode') == 'simple':
-            # # self.x_mode = 0
-        # # else:
-            # # self.x_mode = 1
-
         self.profondeur_mini = int(self.app.config.get('histopocene',
                                                         'profondeur_mini'))
         self.profondeur_maxi = int(self.app.config.get('histopocene',
                                                         'profondeur_maxi'))
         self.x_maxi = int(self.app.config.get('histopocene', 'x_maxi'))
         self.d_lissage = int(self.app.config.get('histopocene', 'd_lissage'))
-        # # self.x_coeff = float(self.app.config.get('histopocene', 'x_coeff'))
-        # # self.etendue = int(self.app.config.get('histopocene', 'etendue'))
-        # # self.x_lissage = int(self.app.config.get('histopocene', 'x_lissage'))
         self.info = int(self.app.config.get('histopocene', 'info'))
         self.mode_expo = int(self.app.config.get('histopocene', 'mode_expo'))
 
@@ -266,64 +244,6 @@ class Reglage(Screen):
             if scr.p2_conn:
                 scr.p2_conn.send(['d_lissage', self.d_lissage])
 
-        # # if iD == 'x_coeff':
-            # # self.x_coeff = round(value, 2)
-
-            # # self.app.config.set('histopocene', 'x_coeff', self.x_coeff)
-            # # self.app.config.write()
-
-            # # if scr.p2_conn:
-                # # scr.p2_conn.send(['x_coeff', self.x_coeff])
-
-        # # if iD == 'etendue':
-            # # self.etendue = int(value)
-
-            # # self.app.config.set('histopocene', 'etendue', self.etendue)
-            # # self.app.config.write()
-
-            # # if scr.p2_conn:
-                # # scr.p2_conn.send(['etendue', self.etendue])
-
-        # # if iD == 'x_lissage':
-            # # self.x_lissage = int(value)
-
-            # # self.app.config.set('histopocene', 'x_lissage', self.x_lissage)
-            # # self.app.config.write()
-
-            # # if scr.p2_conn:
-                # # scr.p2_conn.send(['x_lissage', self.x_lissage])
-
-    # # def on_switch_d_mode(self, instance, value):
-        # # """le switch est 0 ou 1, seld.d_mode ne peut pas être str"""
-        # # scr = self.app.screen_manager.get_screen('Main')
-
-        # # if value:
-            # # self.d_mode = 1
-            # # d_mode = 'exponentiel'
-        # # else:
-            # # self.d_mode = 0
-            # # d_mode = 'simple'
-        # # if scr.p2_conn:
-            # # scr.p2_conn.send(['d_mode', d_mode])
-        # # self.app.config.set('histopocene', 'd_mode', d_mode)
-        # # self.app.config.write()
-        # # print("d_mode =", self.d_mode, d_mode)
-
-    # # def on_switch_x_mode(self, instance, value):
-        # # scr = self.app.screen_manager.get_screen('Main')
-        # # if value:
-            # # self.x_mode = 1
-            # # x_mode = 'exponentiel'
-        # # else:
-            # # self.x_mode = 0
-            # # x_mode = 'simple'
-
-        # # if scr.p2_conn:
-            # # scr.p2_conn.send(['x_mode', x_mode])
-        # # self.app.config.set('histopocene', 'x_mode', x_mode)
-        # # self.app.config.write()
-        # # print("x_mode =", self.x_mode, x_mode)
-
     def on_switch_info(self, instance, value):
         scr = self.app.screen_manager.get_screen('Main')
         if value:
@@ -406,11 +326,7 @@ class Grande_EchelleApp(App):
                                             'profondeur_mini': 1500,
                                             'profondeur_maxi': 4000,
                                             'x_maxi': 500,
-                                            # # 'd_mode': 'simple',
-                                            # # 'x_mode': 'simple',
                                             'd_lissage': 50,
-                                            # # 'x_coeff': 0.20,
-                                            # # 'etendue': 200,
                                             'mode_expo': 25,
                                             'info': 0})
 
@@ -533,45 +449,11 @@ class Grande_EchelleApp(App):
                 self.x_maxi = value
                 self.config.set('histopocene', 'x_maxi', self.x_maxi)
 
-            # # if token == ('histopocene', 'd_mode'):
-                # # # value = simple ou exponentiel
-                # # if value != 'simple':
-                    # # self.d_mode = 0
-                # # else:
-                    # # self.d_mode = 1
-                # # self.config.set('histopocene', 'd_mode', value)
-
-            # # if token == ('histopocene', 'x_mode'):
-                # # # value = simple ou exponentiel
-                # # if value != 'simple':
-                    # # self.x_mode = 0
-                # # else:
-                    # # self.x_mode = 1
-                # # self.config.set('histopocene', 'x_mode', value)
-
             if token == ('histopocene', 'd_lissage'):
                 if value < 10: value = 10
                 if value > 120: value = 120
                 self.d_lissage = int(value)
                 self.config.set('histopocene', 'd_lissage', self.d_lissage)
-
-            # # if token == ('histopocene', 'x_lissage'):
-                # # if value < 10: value = 10
-                # # if value > 120: value = 120
-                # # self.x_lissage = int(value)
-                # # self.config.set('histopocene', 'x_lissage', self.x_lissage)
-
-            # # if token == ('histopocene', 'x_coeff'):
-                # # if value < 0.1: value = 0.1
-                # # if value > 1: value = 1
-                # # self.x_coeff = value
-                # # self.config.set('histopocene', 'x_coeff', self.x_coeff)
-
-            # # if token == ('histopocene', 'etendue'):
-                # # if value < 100: value = 100
-                # # if value > 500: value = 500
-                # # self.etendue = int(value)
-                # # self.config.set('histopocene', 'etendue', self.etendue)
 
             if token == ('histopocene', 'mode_expo'):
                 if value in [0, 1]:

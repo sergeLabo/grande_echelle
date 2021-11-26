@@ -51,14 +51,10 @@ class GrandeEchelle:
         self.profondeur_mini = int(self.config['histopocene']['profondeur_mini'])
         self.profondeur_maxi = int(self.config['histopocene']['profondeur_maxi'])
         self.x_maxi = int(self.config['histopocene']['x_maxi'])
-        # # self.x_coeff = float(self.config['histopocene']['x_coeff'])
-        # # self.etendue = int(self.config['histopocene']['etendue'])
         self.d_lissage = int(self.config['histopocene']['d_lissage'])
-        # # self.d_mode = self.config['histopocene']['d_mode']
-        # # self.x_lissage = int(self.config['histopocene']['x_lissage'])
-        # # self.x_mode = self.config['histopocene']['x_mode']
-        self.info = self.config['histopocene']['info']
-        self.mode_expo = self.config['histopocene']['mode_expo']
+        self.info = int(self.config['histopocene']['info'])
+        self.mode_expo = int(self.config['histopocene']['mode_expo'])
+        self.full_screen = int(self.config['histopocene']['full_screen'])
         if self.mode_expo:
             self.info = 0
             self.full_screen = 1
@@ -74,7 +70,7 @@ class GrandeEchelle:
 
     def create_window(self):
         cv2.namedWindow('histopocene', cv2.WND_PROP_FULLSCREEN)
-
+                                    
     def receive_thread(self):
         t = Thread(target=self.receive)
         t.start()
@@ -109,30 +105,9 @@ class GrandeEchelle:
                 if self.mode_expo:
                     self.info = 0
 
-            # # elif data[0] == 'd_mode':
-                # # self.d_mode = data[1]
-                # # print("d_mode reçu dans grande echelle:", self.d_mode)
-
-            # # elif data[0] == 'x_mode':
-                # # self.x_mode = data[1]
-                # # print("x_mode reçu dans grande echelle:", self.x_mode)
-
             elif data[0] == 'd_lissage':
                 self.d_lissage = data[1]
                 print("d_lissage reçu dans grande echelle:", self.d_lissage)
-
-            # # elif data[0] == 'x_coeff':
-                # # self.x_coeff = data[1]
-                # # print("x_coeff reçu dans grande echelle:", self.x_coeff)
-
-            # # elif data[0] == 'etendue':
-                # # self.etendue = data[1]
-                # # print("etendue reçu dans grande echelle:", self.etendue)
-
-            # # elif data[0] == 'x_lissage':
-                # # self.x_lissage = data[1]
-                # ## self.histo_x = [0]*self.x_lissage
-                # # print("x_lissage reçu dans grande echelle:", self.x_lissage)
 
             elif data[0] == 'quit':
                 self.loop = 0
@@ -142,16 +117,7 @@ class GrandeEchelle:
             sleep(0.001)
 
     def get_frame(self, depth):
-        """ Appelé à chaque frame"""
-
-        # En mm, et dans la plage
-        # # depth -= self.profondeur_mini
-        # si 1800 avec 1200:5000, depth=1800-1200=600
-        # si 5200, depth=4000, 5000-1200=3800, depth=3800
-        # # if depth <= 0:
-            # # depth = 0
-        # # if depth > self.profondeur_maxi - self.profondeur_mini:
-            # # depth = self.profondeur_maxi - self.profondeur_mini
+        """ Appelé à chaque frame, en mm"""
 
         # Mise à jour de la pile
         self.histo_d.append(depth)
@@ -163,9 +129,6 @@ class GrandeEchelle:
                                         type_='simple'))
         except:
             print("Erreur moving_average depth")
-
-        # # plage = self.profondeur_maxi - self.profondeur_mini
-        # # frame = int(depth * self.lenght/plage)
 
         # Pour bien comprendre
         mini = self.profondeur_mini
@@ -230,7 +193,6 @@ class GrandeEchelle:
         """Boucle infinie du script"""
 
         while self.loop:
-
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.frame)
             ret, img = self.video.read()
 
