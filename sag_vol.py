@@ -7,9 +7,39 @@ import matplotlib.pyplot as plt
 def sag_vol(d):
     """
     scipy.signal.savgol_filter(y, 51, 3) # window size 51, polynomial order 3
+
+    Must be ‘mirror’, ‘constant’, ‘nearest’, ‘wrap’ or ‘interp’. This determines
+    the type of extension to use for the padded signal to which the filter is
+    applied.
+
+    When mode is ‘constant’, the padding value is given by cval.
+
+    See the Notes for more details on ‘mirror’, ‘constant’, ‘wrap’, and ‘nearest’.
+
+    When the ‘interp’ mode is selected (the default), no extension is used.
+
+    Instead, a degree polyorder polynomial is fit to the last window_length
+    values of the edges, and this polynomial is used to evaluate the last
+    window_length // 2 output values.
+
+    ‘mirror’:
+        Repeats the values at the edges in reverse order.
+        The value closest to the edge is not included.
+
+    ’nearest’:
+        The extension contains the nearest input value.
+
+    ’constant’:
+        The extension contains the value given by the cval argument.
+
+    ‘wrap’:
+        The extension contains the values from the other end of the array.
+
+
+
     """
 
-    yhat = scipy.signal.savgol_filter(d, 5, 1, mode='constant')
+    yhat = scipy.signal.savgol_filter(d, 63, 7, mode='wrap')
 
     return yhat
 

@@ -22,13 +22,24 @@ import enum
 import math
 import os
 import time
+import pathlib
 
 import numpy as np
 import cv2
 
-# TODO: Adds support for window and MAC
+#TODO: Adds support for window and MAC
 EDGETPU_SHARED_LIB = 'libedgetpu.so.1'
 
+current_dir = pathlib.Path(__file__).parent
+print("current dir in pose_engine:", current_dir)
+
+
+POSENET_SHARED_LIB = os.path.join(  current_dir,
+                                    'posenet/posenet_lib',
+                                    os.uname().machine,
+                                    'posenet_decoder.so')
+
+print("POSENET_SHARED_LIB :", POSENET_SHARED_LIB)
 
 class KeypointType(enum.IntEnum):
     """Pose kepoints."""
@@ -84,7 +95,7 @@ Pose = collections.namedtuple('Pose', ['keypoints', 'score'])
 class PoseEngine():
     """Engine used for pose tasks."""
 
-    def __init__(self, model_path, POSENET_SHARED_LIB, mirror=False):
+    def __init__(self, model_path, mirror=False):
         """Creates a PoseEngine with given model.
 
         Args:
@@ -97,9 +108,8 @@ class PoseEngine():
 
         edgetpu_delegate = load_delegate(EDGETPU_SHARED_LIB)
         posenet_decoder_delegate = load_delegate(POSENET_SHARED_LIB)
-        self._interpreter = Interpreter(model_path,
-                                        experimental_delegates=[edgetpu_delegate,
-                                                                posenet_decoder_delegate])
+        self._interpreter = Interpreter(
+            model_path, experimental_delegates=[edgetpu_delegate, posenet_decoder_delegate])
         self._interpreter.allocate_tensors()
 
         self._mirror = mirror

@@ -1,5 +1,8 @@
 # Grande Echelle
 
+### Le film n'est pas dans ce dépôt
+Il est disponible à ????
+
 ### Installation
 Testée avec Debian 11 Bullseye
 
@@ -38,9 +41,15 @@ cd /le/dossier/de/grande_echelle/
 python3 -m venv --system-site-packages mon_env
 # Activation
 source mon_env/bin/activate
-# Installation des packages, numpy, opencv-python, pyrealsense2, kivy
-python3 -m pip install -r requirements.txt
+# Installation des packages, numpy, opencv-python, pyrealsense2, kivy, ...
+python3 -m pip install -r requirements_with_version.txt
 ```
+
+#### Bug dans Kivy
+``` bash
+sudo apt install xclip
+```
+
 
 ### Excécution
 Copier coller le lanceur grande-echelle.desktop sur le Bureau
@@ -76,8 +85,8 @@ frame_rate_du_film = 25
 film = ICOS.mp4
 profondeur_mini = 2000
 profondeur_maxi = 5000
-x_maxi = 1000
-d_lissage = 50
+largeur_maxi = 1000
+pile_size = 50
 mode_expo = 1
 info = 0
 ```
@@ -95,10 +104,10 @@ info = 0
 * around = 1 nombre de pixels autour de la détection pour calcul moyenné de la profondeur, 1 à 3 mais ne change rien
 * frame_rate_du_film = 50, ne pas le modifier
 * film = 'ICOS.mp4' 1920x1080, 25 fps!
-* d_lissage = 80 lissage de la profondeur
+* pile_size = 80 lissage de la profondeur
 * profondeur_mini = 1200, cale le 0 de la profondeur
 * profondeur_maxi = 4000, limite le maxi
-* x_maxi = 1500, limite la plage des x
+* largeur_maxi = 1500, limite la plage des x
 
 ### LICENSE
 

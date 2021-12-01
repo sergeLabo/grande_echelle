@@ -22,7 +22,7 @@ def moving_average(x, n, type_='simple'):
     a_liss = np.convolve(x, weights, mode='full')[:len(x)]
     a_liss[:n] = a_liss[n]
 
-    return a_liss[0]
+    return a_liss
 
 
 if __name__ == '__main__':
@@ -33,56 +33,47 @@ if __name__ == '__main__':
 
     print(len(data))  # 294
 
-    l = 12
-
+    l = 9
     average5 = []
     for i in range(200):
         d = []
         for j in range(l):
             d.append(data[i + j])
         d = np.array(d)
-        m = moving_average(d, 5, type_='expo')
-        average5.append(int(m))
+        m = moving_average(d, 8, type_='expo')
+        average5.append(int(m[0]))
 
-    average7 = []
+    l = 28
+    average2 = []
     for i in range(200):
         d = []
         for j in range(l):
             d.append(data[i + j])
         d = np.array(d)
-        m = moving_average(d, 7, type_='expo')
-        average7.append(int(m))
+        m = moving_average(d, 9, type_='simple')
+        average2.append(int(m[0]))
 
-    average9 = []
+    l = 28
+    average3 = []
     for i in range(200):
         d = []
         for j in range(l):
             d.append(data[i + j])
         d = np.array(d)
-        m = moving_average(d, 9, type_='expo')
-        average9.append(int(m))
-
-    average11 = []
-    for i in range(200):
-        d = []
-        for j in range(l):
-            d.append(data[i + j])
-        d = np.array(d)
-        m = moving_average(d, 11, type_='expo')
-        average11.append(int(m))
+        m = moving_average(d, 27, type_='simple')
+        average3.append(int(m[0]))
 
     fig, ax = plt.subplots(1, figsize=(8, 6))
     fig.suptitle('Multiple Lines in Same Plot', fontsize=15)
 
     x = [i for i in range(200)]
     y1 = data[:200]
-    ax.plot(x, y1, color='r', label="My Line 1")
+    ax.plot(x, y1, color='r')
 
     x1 = [i+5 for i in x]
-
-    ax.plot(x1, average5, color='b', label="5")
-    ax.plot(x1, average7, color='m', label="7")
-    ax.plot(x1, average9, color='g', label="9")
-    ax.plot(x1, average11, color='k', label="11")
+    # # ax.plot(x1, average5, color='b')
+    ax.plot(x1, average2, color='m')
+    ax.plot(x1, average3, color='g')
+    # # ax.plot(x1, average11, color='k')
 
     plt.show()

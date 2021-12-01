@@ -77,12 +77,24 @@
     BoxLayout: # une boite pour tout
         orientation: 'vertical'
 
+        BoxLayout: # une boite pour espacer
+            orientation: 'horizontal'
+            size_hint_y: 0.05
+
         BoxLayout: # une boite pour slider et switch
             orientation: 'horizontal'
             BoxLayout: # une boite pour switch
                 size_hint_x: 0.4
                 BoxLayout:
                     orientation: 'vertical'
+                    BoxLayout: # brightness_contrast_on
+                        orientation: 'vertical'
+                        size_hint_y: 0.25
+                        Label:
+                            text: 'Brightness Contrast On'
+                        Switch:
+                            id: brightness_contrast_on
+                            on_active: root.on_switch_brightness_contrast_on(*args)
                     BoxLayout: # mode expo
                         orientation: 'vertical'
                         size_hint_y: 0.25
@@ -105,11 +117,10 @@
 
             BoxLayout: # une boite pour slider
                 orientation: 'vertical'
-                size_hint_x: 0.6
+                size_hint_x: 0.85
 
                 BoxLayout: # une boite texte et affichage brightness
                     orientation: 'horizontal'
-                    size_hint_y: 0.10
                     Label:  # brightness
                         text: 'Luminosité'
                         font_size: '24dp'
@@ -119,7 +130,6 @@
                         font_size: '24dp'
                         color: (0.5, 0.5, 0, 1)
                 Slider: # brightness
-                    size_hint_y: 0.10
                     id: brightness
                     orientation: 'horizontal'
                     range: -1, 1
@@ -130,7 +140,6 @@
 
                 BoxLayout: # une boite texte et affichage contrast
                     orientation: 'horizontal'
-                    size_hint_y: 0.10
                     Label:  # contrast
                         text: 'Contraste'
                         font_size: '24dp'
@@ -140,7 +149,6 @@
                         font_size: '24dp'
                         color: (0.5, 0.5, 0, 1)
                 Slider: # contrast
-                    size_hint_y: 0.10
                     id: contrast
                     orientation: 'horizontal'
                     range: -1, 1
@@ -151,7 +159,6 @@
 
                 BoxLayout: # une boite texte et affichage threshold
                     orientation: 'horizontal'
-                    size_hint_y: 0.10
                     Label:  # threshold
                         text: 'Seuil de détection'
                         font_size: '24dp'
@@ -161,7 +168,6 @@
                         font_size: '24dp'
                         color: (0.5, 0.5, 0, 1)
                 Slider: # threshold
-                    size_hint_y: 0.10
                     id: threshold
                     orientation: 'horizontal'
                     range: 0.01, 0.99
@@ -171,7 +177,7 @@
                     on_value: root.do_slider('threshold', *args)
 
                 BoxLayout: # une boite texte et affichage profondeur_mini
-                    size_hint_y: 0.10
+
                     orientation: 'horizontal'
                     Label:  # profondeur_mini
                         text: 'Profondeur mini'
@@ -181,8 +187,7 @@
                         text: str(root.profondeur_mini)
                         font_size: '24dp'
                         color: (0.5, 0.5, 0, 1)
-                Slider:  # around
-                    size_hint_y: 0.10
+                Slider:  # profondeur_mini
                     id: profondeur_mini
                     orientation: 'horizontal'
                     range: 500, 2000
@@ -192,7 +197,7 @@
                     on_value: root.do_slider('profondeur_mini', *args)
 
                 BoxLayout: # une boite texte et affichage profondeur_maxi
-                    size_hint_y: 0.10
+
                     orientation: 'horizontal'
                     Label:  # profondeur_maxi
                         text: 'Profondeur maxi'
@@ -203,7 +208,6 @@
                         font_size: '24dp'
                         color: (0.5, 0.5, 0, 1)
                 Slider:  # profondeur_maxi
-                    size_hint_y: 0.10
                     id: profondeur_maxi
                     orientation: 'horizontal'
                     range: 3000, 8000
@@ -213,25 +217,85 @@
                     on_value: root.do_slider('profondeur_maxi', *args)
 
                 BoxLayout: # une boite texte et affichage x maxi
-                    size_hint_y: 0.10
+
                     orientation: 'horizontal'
-                    Label:  # x_maxi
-                        text: 'X maxi'
+                    Label:  # largeur_maxi
+                        text: 'Largeur maxi'
                         font_size: '24dp'
                         color: (0.5, 0.5, 0, 1)
                     Label:
-                        text: str(root.x_maxi)
+                        text: str(root.largeur_maxi)
                         font_size: '24dp'
                         color: (0.5, 0.5, 0, 1)
-                Slider:  # x_maxi
-                    size_hint_y: 0.10
-                    id: x_maxi
+                Slider:  # largeur_maxi
+                    id: largeur_maxi
                     orientation: 'horizontal'
                     range: 100, 2000
                     step: 40
-                    value: root.x_maxi
-                    value_position: root.x_maxi
-                    on_value: root.do_slider('x_maxi', *args)
+                    value: root.largeur_maxi
+                    value_position: root.largeur_maxi
+                    on_value: root.do_slider('largeur_maxi', *args)
+
+                BoxLayout: # une boite texte et affichage pile size
+
+                    orientation: 'horizontal'
+                    Label:  # pile size
+                        text: 'Taille de la pile de profondeur'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:
+                        text: str(root.pile_size)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider:  # pile size
+                    id: pile_size
+                    orientation: 'horizontal'
+                    range: 10, 100
+                    step: 1
+                    value: root.pile_size
+                    value_position: root.pile_size
+                    on_value: root.do_slider('pile_size', *args)
+
+                BoxLayout: # une boite texte et affichage lissage
+
+                    orientation: 'horizontal'
+                    Label:  # lissage
+                        text: 'Coefficient de lissage'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:
+                        text: str(root.lissage)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider:  # pile sizelissage
+                    id: lissage
+                    orientation: 'horizontal'
+                    range: 1, 100
+                    step: 1
+                    value: root.lissage
+                    value_position: root.lissage
+                    on_value: root.do_slider('lissage', *args)
+
+                BoxLayout: # une boite texte et affichage slow_size
+
+                    orientation: 'horizontal'
+                    Label:  # slow_size
+                        text: 'Taille de la Pile slow'
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                    Label:
+                        text: str(root.slow_size)
+                        font_size: '24dp'
+                        color: (0.5, 0.5, 0, 1)
+                Slider:  # pile sizelissage
+                    id: slow_size
+                    orientation: 'horizontal'
+                    range: 1, 30
+                    step: 1
+                    value: root.slow_size
+                    value_position: root.slow_size
+                    on_value: root.do_slider('slow_size', *args)
+
 
         BoxLayout: # une boite pour espacer
             orientation: 'horizontal'
@@ -239,7 +303,7 @@
 
         BoxLayout: # une boite pour options retour quitter
             orientation: 'horizontal'
-            size_hint_y: 0.15
+            size_hint_y: 0.10
             Button:  # Settings
                 background_color: (0.7, 0.7, 0.7, 1)
                 text: 'Retour'

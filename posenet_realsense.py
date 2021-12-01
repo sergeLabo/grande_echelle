@@ -33,89 +33,93 @@ Les distances en 3D sont en mm, comme dans grande echelle!
 
 import os
 from time import time, sleep
-import enum
 from threading import Thread
 
 import numpy as np
 import cv2
-import pyrealsense2 as rs
 
-from pose_engine import PoseEngine
+import pyrealsense2 as rs
+from my_realsense import MyRealSense
+
+from my_posenet_conversion import MyPoseNetConversion
+from my_posenet import MyPosenet
 from pose_engine import EDGES
 
 from my_config import MyConfig
 from filtre import moving_average
 
 
-class PoseNetConversion:
-    """Conversion de posenet vers ma norme
-    1 ou 2 squelettes capturés:
 
-    [Pose(keypoints={
-    <KeypointType.NOSE: 0>: Keypoint(point=Point(x=652.6, y=176.6), score=0.8),
-    <KeypointType.LEFT_EYE: 1>: Keypoint(point=Point(x=655.9, y=164.3), score=0.9)},
-    score=0.53292614),
+class PosenetRealsenseViewer:
+    """Affichage dans une fenêtre OpenCV, et gestion des fenêtres"""
 
-    Pose(keypoints={
-    <KeypointType.NOSE: 0>: Keypoint(point=Point(x=329.2562, y=18.127075), score=0.91656697),
-    <KeypointType.LEFT_EYE: 1>: Keypoint(point=Point(x=337.1971, y=4.7381477), score=0.14472471)},
-    score=0.35073516)]
+    def __init__(self, conn, config):
 
-    Conversion en:
-    skeleton1 = {0: (x=652.6, y=176.6),
-    et
-    skeleton2 = {0: (x=329.2, y=18.1), ... etc ... jusque 16
-    soit
-    skeleton2 = {0: (329.2, 18.1),
+        self.conn = conn
+        self.config = config
+        self.loop = 1
+        self.t0 = time()
 
-    skeletons = list de skeleton = [skeleton1, skeleton2]
-    """
+        self.mode_expo = int(self.config['histopocene']['mode_expo'])
+        self.full_screen = int(self.config['histopocene']['full_screen'])
+        if self.mode_expo:
+            self.info = 0
+            self.full_screen = 0
 
-    def __init__(self, outputs, threshold):
+        self.create_window()
 
-        self.outputs = outputs
-        self.threshold = threshold
-        self.skeletons = []
-        self.conversion()
+    def create_window(self):
+        if not self.mode_expo:
+            cv2.namedWindow('posecolor', cv2.WND_PROP_FULLSCREEN)
 
-    def conversion(self):
-        """Convertit les keypoints posenet dans ma norme"""
+    def set_window(self):
+        if not self.mode_expo:
+            if self.full_screen:
+                cv2.setWindowProperty(  'posecolor',
+                                        cv2.WND_PROP_FULLSCREEN,
+                                        cv2.WINDOW_FULLSCREEN)
+            else:
+                cv2.setWindowProperty(  'posecolor',
+                                        cv2.WND_PROP_FULLSCREEN,
+                                        cv2.WINDOW_NORMAL)
 
-        self.skeletons = []
-        for pose in self.outputs:
-            xys = self.get_points_2D(pose)
-            self.skeletons.append(xys)
+    def draw_line(self):
+        # Ligne au centre
+        h = self.img.shape[0]
+        w = self.img.shape[1]
+        cv2.line(self.img, (int(w/2), 0),
+                                 (int(w/2), h),
+                                 (255, 255, 255), 2)
 
-    def get_points_2D(self, pose):
-        """ ma norme = dict{index du keypoint: (x, y), }
-        xys = {0: (698, 320), 1: (698, 297), 2: (675, 295), .... } """
+    def viewer(self):
+        # ############### Affichage de l'image
+        # La ligne au centre
+        self.draw_line()
 
-        xys = {}
-        # # print("dans PoseNetConversion:", self.threshold)
-        for label, keypoint in pose.keypoints.items():
-            if keypoint.score > self.threshold:
-                xys[label.value] = [int(keypoint.point[0]),
-                                    int(keypoint.point[1])]
-        return xys
+        if not self.mode_expo:
+            cv2.imshow('posecolor', self.img)
 
+        # Calcul du FPS, affichage toutes les 10 s
+        if time() - self.t0 > 10:
+            print("FPS =", int(self.nbr/10))
+            self.t0, self.nbr = time(), 0
 
-class Personnage:
-    """Permet de stocker facilement les attributs d'un personnage,
-    et de les reset-er.
-    """
+        k = cv2.waitKey(1)
+        # Pour quitter
+        if k == 27:  # Esc
+            self.conn.send(['quit', 1])
+            self.loop = 0
+            # # self.conn_loop = 0
+            print("Quit dans Posenet Realsense")
 
-    def __init__(self):
-        self.reset()
+            self.close()
 
-    def reset(self):
-        self.who = None
-        self.xys = None
-        self.points_3D = None,
-        self.depth = None
-        self.x = None
+    def close(self):
+        cv2.destroyAllWindows()
 
 
-class PosenetRealsense:
+
+class PosenetRealsense(MyRealSense, MyPosenet, PosenetRealsenseViewer):
     """ Capture avec  Camera RealSense D455
         Détection de la pose avec Coral USB Stick
         Calcul des coordonnées 3D
@@ -128,6 +132,10 @@ class PosenetRealsense:
         """Les paramètres sont à définir dans le fichier posenet.ini
         En principe, rien ne doit être modifié dans les autres paramètres.
         """
+        print("Lancement de PosenetRealsense")
+
+        MyRealSense.__init__(self, config)
+        PosenetRealsenseViewer.__init__(self, conn, config)
 
         self.conn = conn
         self.current_dir = current_dir
@@ -140,9 +148,12 @@ class PosenetRealsense:
 
         self.config = config
 
-        self.posenet_shared_lib = (f'{self.current_dir}/posenet_lib/'
-                                    f'{os.uname().machine}/posenet_decoder.so')
-        print("posenet_shared_lib =", self.posenet_shared_lib)
+        # Taille d'image possible: 1280x720, 640x480 seulement
+        # 640x480 est utile pour fps > 30
+        # Les modèles posenet imposent une taille d'image
+        self.width = int(self.config['camera']['width_input'])
+        self.height = int(self.config['camera']['height_input'])
+        MyPosenet.__init__(self, self.width, self.height)
 
         # Luminosité
         self.brightness = float(self.config['pose']['brightness'])
@@ -150,106 +161,15 @@ class PosenetRealsense:
         self.contrast = float(self.config['pose']['contrast'])
         # Seuil de confiance de reconnaissance du squelette
         self.threshold = float(self.config['pose']['threshold'])
-
-        # Nombre de pixels autour du point pour moyenne du calcul de profondeur
-        self.around = int(self.config['pose']['around'])
-
-        # Taille d'image possible: 1280x720, 640x480 seulement
-        # 640x480 est utile pour fps > 30
-        # Les modèles posenet imposent une taille d'image
-        self.width = int(self.config['camera']['width_input'])
-        self.height = int(self.config['camera']['height_input'])
+        # Activation de la fonction qui mange un peu de FPS
+        self.brightness_contrast_on = int(self.config['pose']['brightness_contrast_on'])
 
         # Pour éliminer les trops loing ou trop près, en mêtre
         self.profondeur_maxi = int(self.config['histopocene']['profondeur_maxi'])
         self.profondeur_mini = int(self.config['histopocene']['profondeur_mini'])
-        self.x_maxi = int(self.config['histopocene']['x_maxi'])
+        self.largeur_maxi = int(self.config['histopocene']['largeur_maxi'])
         self.full_screen = int(self.config['histopocene']['full_screen'])
         self.mode_expo = int(self.config['histopocene']['mode_expo'])
-
-        self.set_pipeline()
-        self.get_engine()
-
-        # Toutes les datas du personnage vert
-        self.perso = Personnage()
-
-        self.create_window()
-
-    def create_window(self):
-        if not self.mode_expo:
-            cv2.namedWindow('posecolor', cv2.WND_PROP_FULLSCREEN)
-
-    def get_engine(self):
-        """Crée le moteur de calcul avec le stick Coral"""
-
-        res = str(self.width) + 'x' + str(self.height)
-        print("width:", self.width, ", height:", self.height)
-        print("Résolution =", res)
-
-        if res == "1280x720":
-            self.src_size = (1280, 720)
-            self.appsink_size = (1280, 720)
-            model_size = (721, 1281)
-        elif res == "640x480":
-            self.src_size = (640, 480)
-            self.appsink_size = (640, 480)
-            model_size = (481, 641)
-        else:
-            print(f"La résolution {res} n'est pas possible.")
-            self.conn.send(['quit', 1])
-            sleep(0.1)
-            os._exit(0)
-
-        # TODO
-        model = (f'{self.current_dir}'
-                 f'/models/mobilenet/posenet_mobilenet_v1_075_'
-                 f'{model_size[0]}_{model_size[1]}'
-                 f'_quant_decoder_edgetpu.tflite'   )
-        print('Loading model: ', model)
-
-        try:
-            self.engine = PoseEngine(   model,
-                                        self.posenet_shared_lib,
-                                        mirror=False)
-        except:
-            print(f"Pas de Stick Coral connecté.")
-            if self.conn:
-                self.conn.send(['quit', 1])
-            sleep(0.100)
-            os._exit(0)
-
-    def set_pipeline(self):
-        """Crée le flux d'image avec la caméra D455"""
-
-        self.pipeline = rs.pipeline()
-        config = rs.config()
-        pipeline_wrapper = rs.pipeline_wrapper(self.pipeline)
-        try:
-            pipeline_profile = config.resolve(pipeline_wrapper)
-        except:
-            print(f"Pas de Capteur Realsense connecté")
-            if self.conn:
-                self.conn.send(['quit', 1])
-            sleep(0.100)
-            os._exit(0)
-
-        device = pipeline_profile.get_device()
-        config.enable_stream(rs.stream.color, self.width, self.height,
-                                                            rs.format.bgr8, 30)
-        config.enable_stream(rs.stream.depth, self.width, self.height,
-                                                            rs.format.z16, 30)
-        self.pipeline.start(config)
-        self.align = rs.align(rs.stream.color)
-        unaligned_frames = self.pipeline.wait_for_frames()
-        frames = self.align.process(unaligned_frames)
-        depth = frames.get_depth_frame()
-        self.depth_intrinsic = depth.profile.as_video_stream_profile().intrinsics
-
-        # Affichage de la taille des images
-        color_frame = frames.get_color_frame()
-        img = np.asanyarray(color_frame.get_data())
-        print(f"Taille des images:"
-              f"     {img.shape[1]}x{img.shape[0]}")
 
     def receive_thread(self):
         print("Lancement du thread receive dans posenet")
@@ -259,337 +179,293 @@ class PosenetRealsense:
     def receive(self):
         while self.conn_loop:
             data = self.conn.recv()
+
             if data:
-                if data[0] == 'quit':
-                    print("Quit reçu")
+                if data[0] == 'quit':  # il doit être en premier
+                    print("Quit reçu dans PosenetRealsense")
                     self.loop = 0
                     self.conn_loop = 0
                     os._exit(0)
 
-                elif data[0] == 'threshold':
+                if data[0] == 'threshold':
                     print('threshold reçu dans posenet:', data[1])
                     self.threshold = data[1]
 
-                elif data[0] == 'brightness':
+                if data[0] == 'brightness':
                     print('brightness reçu dans posenet:', data[1])
                     self.brightness = data[1]
 
-                elif data[0] == 'contrast':
+                if data[0] == 'contrast':
                     print('contrast reçu dans posenet:', data[1])
                     self.contrast = data[1]
 
-                elif data[0] == 'profondeur_mini':
+                if data[0] == 'brightness_contrast_on':
+                    print('brightness_contrast_on reçu dans posenet:', data[1])
+                    self.brightness_contrast_on = data[1]
+
+                if data[0] == 'profondeur_mini':
                     print('profondeur_mini reçu dans posenet::', data[1])
                     self.profondeur_mini = data[1]
 
-                elif data[0] == 'profondeur_maxi':
+                if data[0] == 'profondeur_maxi':
                     print('profondeur_maxi reçu dans posenet::', data[1])
                     self.profondeur_maxi = data[1]
 
-                elif data[0] == 'x_maxi':
-                    print('x_maxi reçu dans posenet:', data[1])
-                    self.x_maxi = data[1]
+                if data[0] == 'largeur_maxi':
+                    print('largeur_maxi reçu dans posenet:', data[1])
+                    self.largeur_maxi = data[1]
 
-                elif data[0] == 'mode_expo':
+                if data[0] == 'mode_expo':
                     print('mode_expo reçu dans posenet:', data[1])
                     self.mode_expo = data[1]
 
             sleep(0.001)
 
-    def get_personnages(self, outputs):
-        """ Appelé depuis la boucle infinie, c'est le main d'une frame.
-                Récupération de tous les squelettes
-                Definition de who
-        """
+    def main(self, outputs):
+        """ Appelé depuis la boucle infinie, c'est le main d'une frame."""
+        self.skelets_2D, self.skelets_3D, self.centers = None, None, None
 
         # Récupération de tous les squelettes
-        persos_2D = PoseNetConversion(outputs, self.threshold).skeletons  # les xys
+        if outputs:
+            # liste des squelettes 2D, un squelette = dict de 17 keypoints
+            self.skelets_2D = MyPoseNetConversion(outputs, self.threshold).skeletons
 
-        # Ajout de la profondeur pour 3D
-        persos_3D = self.get_persos_3D(persos_2D)
+            if self.skelets_2D:
+                # Ajout de la profondeur pour 3D, et capture des couleurs
+                # Liste des squelettes 3D, un squelette = list de 17 keypoints
+                # un keypoint = liste de 3 coordonnées
+                self.skelets_3D = self.get_skelets_3D()
+                # Calcul de tous les centres
+                self.centers = get_center_3D(self.skelets_3D)
 
-        # Récup de who, apply to self.perso
-        who = self.get_who(persos_3D)
+                # Tri des squelettes dans la zone acceptable et pas tout None
+                self.get_only_skelets_in_zone_and_valable()
 
-        # Apply who, pour le personnage vert et les rouges
-        self.apply_who(who, persos_2D, persos_3D)
+                # self.skelets_2D est trié ici, ce n'est pas le même que ci-dessus
+                if self.skelets_2D:
+                    # Détermination du squelette au centre
+                    self.get_who()
+                    self.draw_text()
+                    self.send()
+                    # Dessin
+                    self.draw_all_poses()
 
-    def get_who(self, persos_3D):
-        """who est l'indice du personnage vert, dans la liste des perso 3D"""
-
-        who = None
-        # (x, z) est le centre en vue de dessus,
-        # all_x_z est la liste de tous les centres
-        all_x_z = []
-        all_x_sorted = []
-
-        if persos_3D:
-            for p, perso in enumerate(persos_3D):
-                # Le x est la 1ère valeur, le z la 3ème
-                if perso:
-                    x = get_moyenne(perso, 0)
-                    z = get_moyenne(perso, 2)
-                    if x and z:
-                        all_x_z.append([p, int(x), int(z)])
-                    else:
-                        all_x_z.append([p, 100000, 100000])
-
-        # perso3D = [[bon], [17*None], [bon], None]
-        # [[0, 200, 5000], [2, 500, 3000]
-        # Je ne garde que ceux devant profondeur_maxi, derrière le mini,
-        # et dans la plage des x
-        all_x = []  # tous les x valides
-        all_p = []  # index des x valides dans persos_3D
-        for n, x0, z0 in all_x_z:
-            if self.profondeur_mini - 1000 < z0 < self.profondeur_maxi + 500:
-                if -self.x_maxi < x0 < self.x_maxi:
-                    all_x.append(abs(x0))
-                    all_p.append(n)
-
-        if all_x:
-            all_x_sorted = sorted(all_x)
-            ind = all_x.index(all_x_sorted[0])
-            who = all_p[ind]
-
-        return who
-
-    def apply_who(self, who, persos_2D, persos_3D):
-        """Apply who pour le personnage vert et les rouges
-        Le vert est self.perso, les autres sont dans self.perso_bad
+    def get_only_skelets_in_zone_and_valable(self):
+        """Elimination des squelettes pas dans la zone
+                profondeur mini à maxi et dans largeur_maxi
+        et qui ne sont pas [None]*17
         """
+        skelets_2D, skelets_3D, centers = [], [], []
 
-        # Application à perso pour définir le vert
-        if who is not None:
-            self.perso.who = who
-            self.perso.xys = persos_2D[who]
-            self.perso.points_3D = persos_3D[who]
-            # 2 est la profondeur en z
-            self.perso.depth = get_moyenne(persos_3D[who], 2)
-            # 0 est le x, 1 le y
-            self.perso.x = get_moyenne(persos_3D[who], 0)
+        for i in range(len(self.skelets_2D)):
+            # Si il n'y a pas de centre, il n'y a pas de personnage
+            if self.centers[i]:
+                # Entre mini maxi
+                if self.profondeur_mini < self.centers[i][2] < self.profondeur_maxi:
+                    # Pas trop écarté
+                    if abs(self.centers[i][0]) < self.largeur_maxi:
+                        # Squelette 3D valide, ne devrait pas arrivé si self.centers[i]
+                        if self.skelets_3D[i] != [None]*17:
+                            skelets_2D.append(self.skelets_2D[i])
+                            skelets_3D.append(self.skelets_3D[i])
+                            centers.append(self.centers[i])
 
-        # Affichage du personnage vert
-        if self.perso.who is not None:
-            self.draw_pose(self.color_arr, self.perso.xys, color=[0, 255, 0])
+        self.skelets_2D = skelets_2D
+        self.skelets_2D = skelets_2D
+        self.centers = centers
 
-        # Affichage de la profondeur et de x du perso vert
-        self.draw_depth_values()
-
-        # Affichage des autres personnages, persos_2D=liste de dict
-        for p, xys in enumerate(persos_2D):
-            if p != who:
-                self.draw_pose(self.color_arr, xys, color=[0, 0, 255])
-
-    def get_persos_3D(self, persos_2D):
-        """Coordonnées 3D avec les 2D de toutes les détections
-        Suppression des faux persos à [None]*17
+    def get_who(self):
+        """Détermination du squelette au centre
+        self.centers = [[x, y , z], ...]
+        all_x =    [-0.5, 0.8, 0.6]
+        abs_all_x = [0.5, 0.8, 0.6]
         """
-        persos_3D0 = []
-        for xys in persos_2D:
+        if self.centers:
+            # Recherche de celui au centre
+            all_x = [c[0] for c in self.centers]
+            abs_all_x = [abs(c[0]) for c in self.centers]
+
+            if abs_all_x:  # si abs_all_x is not [], alors all_x est aussi
+                mini = min(abs_all_x)
+                # Index du mini des abs est le même que all_x
+                self.who = abs_all_x.index(mini)
+                self.depth = self.centers[self.who][2]
+                # La position en x pour affichage
+                self.x =  self.centers[self.who][0]
+        else:
+            self.who, self.depth, self.x = None, 0, self.x
+
+    def get_skelets_3D(self):
+        """A partir des squelettes 2D détectés dans l'image,
+        retourne les squelettes 3D
+        """
+        skelets_3D = []
+        for xys in self.skelets_2D:
             pts = self.get_points_3D(xys)
-            persos_3D0.append(pts)
-
-        # Suppression des faux persos
-        persos_3D = [x for x in persos_3D0 if x != [None]*17]
-
-        return persos_3D
+            # pts peut être [None]*17
+            skelets_3D.append(pts)
+        return skelets_3D
 
     def get_points_3D(self, xys):
-        """Calcul des coordonnées 3D dans un repère centré sur la caméra,
-        avec le z = profondeur
-        La profondeur est une moyenne de la profondeur des points autour,
-        sauf les extrêmes, le plus petit et le plus gand.
-        TODO: rajouter un filtre sur les absurdes ?
+        """Trouve les points 3D pour un squelette
+        Si tous les points sont inférieur à la valeur du threshold,
+            points_3D == [None]*17:
         """
 
+        # Les coordonnées des 17 points 3D avec qq None
         points_3D = [None]*17
-        for key, val in xys.items():
-            if val:
-                #
-                distances = []
-                x, y = val[0], val[1]
-                # around = nombre de pixel autour du points
-                x_min = max(x - self.around, 0)
-                x_max = min(x + self.around, self.depth_frame.width)
-                y_min = max(y - self.around, 0)
-                y_max = min(y + self.around, self.depth_frame.height)
 
-                for u in range(x_min, x_max):
-                    for v in range(y_min, y_max):
-                        distances.append(self.depth_frame.get_distance(u, v))
-
-                # Si valeurs non trouvées = [0.0, 0.0, 0.0, 0.0]
-                # remove the item 0.0 for all its occurrences
-                dists = [i for i in distances if i != 0.0]
-                dists_sort = sorted(dists)
-                if len(dists_sort) > 2:
-                    goods = dists_sort[1:-1]
-
-                    somme = 0
-                    for item in goods:
-                        somme += item
-                    profondeur = somme/len(goods)
+        # Parcours des squelettes
+        for i, xy in enumerate(xys):
+            if xy:
+                x = xy[0]
+                y = xy[1]
+                # Calcul de la profondeur du point
+                profondeur = self.get_profondeur_du_point(x, y)
+                if profondeur:
                     # Calcul les coordonnées 3D avec x et y coordonnées dans
                     # l'image et la profondeur du point
                     # Changement du nom de la fonction trop long
                     point_2D_to_3D = rs.rs2_deproject_pixel_to_point
-                    point_with_deph_en_m = point_2D_to_3D(self.depth_intrinsic,
+                    point_with_deph = point_2D_to_3D(self.depth_intrinsic,
                                                      [x, y],
                                                      profondeur)
-                    point_with_deph_en_mm = [int(1000*x) for x in point_with_deph_en_m]
-                    points_3D[key] = point_with_deph_en_mm
+                    # Conversion des m en mm
+                    points_3D[i] = [int(1000*x) for x in point_with_deph]
 
         return points_3D
 
-    def draw_pose(self, img, xys, color):
-        """Affiche les points 2D, et les 'os' dans l'image pour un personnage
-        xys = {0: [790, 331], 2: [780, 313],  ... }
+    def get_profondeur_du_point(self, x, y):
+        """Calcul la moyenne des profondeurs des pixels autour du point considéré
+        Filtre les absurdes et les trop loins
         """
-        points = []
-        for xy in xys.values():
-            points.append(xy)
+        profondeur = None
+        distances = []
+        # around = nombre de pixel autour du points
+        x_min = max(x - 1, 0)
+        x_max = min(x + 1, self.depth_frame.width)
+        y_min = max(y - 1, 0)
+        y_max = min(y + 1, self.depth_frame.height)
+
+        for u in range(x_min, x_max):
+            for v in range(y_min, y_max):
+                # Profondeur du point de coordonnée (u, v) dans l'image
+                distances.append(self.depth_frame.get_distance(u, v))
+
+        # Si valeurs non trouvées, retourne [0.0, 0.0, 0.0, 0.0]
+        # Remove the item 0.0 for all its occurrences
+        dists = [i for i in distances if i != 0.0]
+        dists_sort = sorted(dists)
+        if len(dists_sort) > 2:
+            # Suppression du plus petit et du plus grand
+            goods = dists_sort[1:-1]
+            # TODO: rajouter un filtre sur les absurdes ?
+
+            # Calcul de la moyenne des profondeur
+            profondeur = get_average_list_with_None(goods)
+
+        return profondeur
+
+    def draw_all_poses(self):
+        for i, skelet in enumerate(self.skelets_2D):
+            if skelet:
+                if i == self.who:
+                    color = [0, 255, 0]
+                else:
+                    color = [0, 0, 255]
+                self.draw_pose(skelet, color)
+
+    def draw_pose(self, xys, color):
+        """Affiche les points 2D, et les 'os' dans l'image pour un acteur
+        xys = [[790, 331], [780, 313], None,  ... ]
+        """
 
         # Dessin des points
-        for point in points:
-            x = point[0]
-            y = point[1]
-            cv2.circle(img, (x, y), 5, color=(100, 100, 100), thickness=-1)
-            cv2.circle(img, (x, y), 6, color=color, thickness=1)
+        for point in xys:
+            if point:
+                x = point[0]
+                y = point[1]
+                cv2.circle(self.img, (x, y), 5, color=(100, 100, 100),
+                                                                  thickness=-1)
+                cv2.circle(self.img, (x, y), 6, color=color, thickness=1)
 
         # Dessin des os
         for a, b in EDGES:
-            if a not in xys or b not in xys: continue
+            a = a.value  # 0 à 16
+            b = b.value  # 0 à 16
+
+            # Os seulement entre keypoints esxistants
+            if not xys[a] or not xys[b] :
+                continue
+
+            # Les 2 keypoints existent
             ax, ay = xys[a]
             bx, by = xys[b]
-            cv2.line(img, (ax, ay), (bx, by), color, 2)
-
-    def draw_depth_values(self):
-        """Affichage de la moyenne des profondeurs et x en gros
-        du personnage vert
-        """
-
-        if self.perso.depth is not None:
-            depth = self.perso.depth
-            cv2.putText(self.color_arr,  # image
-                        str(int(depth)),  # text
-                        (30, 80),  # position
-                        cv2.FONT_HERSHEY_SIMPLEX,  # police
-                        3,  # taille police
-                        (0, 255, 0),  # couleur
-                        12)  # épaisseur
-
-        if self.perso.x is not None:
-            x = self.perso.x
-            cv2.putText(self.color_arr,  # image
-                        str(int(x)),  # text
-                        (30, 180),  # position
-                        cv2.FONT_HERSHEY_SIMPLEX,  # police
-                        3,  # taille police
-                        (0, 255, 0),  # couleur
-                        12)  # épaisseur
+            cv2.line(self.img, (ax, ay), (bx, by), color, 2)
 
     def draw_text(self):
-        d = {   "Threshold": self.threshold,
+        """Affichage de la moyenne des profondeurs et x du personnage vert"""
+        d = {   "Profondeur": self.depth,
+                "Largeur": self.x,
+                "Threshold": self.threshold,
                 "Brightness": self.brightness,
                 "Contrast": self.contrast,
                 "Profondeur mini": self.profondeur_mini,
                 "Profondeur maxi": self.profondeur_maxi,
-                "X maxi": self.x_maxi}
+                "Largeur maxi": self.largeur_maxi}
 
         i = 0
         for key, val in d.items():
             text = key + " : " + str(val)
-            cv2.putText(self.color_arr,  # image
+            cv2.putText(self.img,  # image
                         text,
-                        (30, 80*i+250),  # position
+                        (30, 80*i+150),  # position
                         cv2.FONT_HERSHEY_SIMPLEX,  # police
-                        1,  # taille police
+                        2,  # taille police
                         (0, 255, 0),  # couleur
                         2)  # épaisseur
             i += 1
 
-    def draw_line(self):
-        # Ligne au centre
-        h = self.color_arr.shape[0]
-        w = self.color_arr.shape[1]
-        cv2.line(self.color_arr, (int(w/2), 0),
-                                 (int(w/2), h),
-                                 (255, 255, 255), 2)
-
-    def set_window(self):
-        if self.full_screen:
-            cv2.setWindowProperty(  'posecolor',
-                                    cv2.WND_PROP_FULLSCREEN,
-                                    cv2.WINDOW_FULLSCREEN)
-        else:
-            cv2.setWindowProperty(  'posecolor',
-                                    cv2.WND_PROP_FULLSCREEN,
-                                    cv2.WINDOW_NORMAL)
-
     def send(self):
-        if self.conn and self.perso.x and self.perso.depth:
-            self.conn.send(['from_realsense', int(self.perso.depth)])
+        if self.conn and self.depth:
+            self.conn.send(['from_realsense', int(self.depth)])
 
     def run(self):
         """Boucle infinie, quitter avec Echap dans la fenêtre OpenCV"""
 
         t0 = time()
-        nbr = 0
+        self.nbr = 0
 
         while self.loop:
-            nbr += 1
-            frames = self.pipeline.wait_for_frames()
+            self.nbr += 1
+
+            # ############### RealSense
+            frames = self.pipeline.wait_for_frames(timeout_ms=80)
+
             # Align the depth frame to color frame
             aligned_frames = self.align.process(frames)
 
             color = aligned_frames.get_color_frame()
             self.depth_frame = aligned_frames.get_depth_frame()
-            if not self.depth_frame:
+
+            if not self.depth_frame and not color:
                 continue
 
-            # L'image captée
             color_data = color.as_frame().get_data()
-
-            # Correction
-            self.color_arr = np.asanyarray(color_data)
-            self.color_arr = apply_brightness_contrast( self.color_arr,
+            self.img = np.asanyarray(color_data)
+            if self.brightness_contrast_on:
+                self.img = apply_brightness_contrast(   self.img,
                                                         self.brightness,
                                                         self.contrast)
 
-            detection = self.engine.DetectPosesInImage
-            outputs, inference_time = detection(self.color_arr)
-            # Recherche des personnages captés
-            self.get_personnages(outputs)
+            # ############### Posenet
+            outputs = self.get_outputs(self.img)
 
-            self.send()
+            # Recherche des squelettes
+            self.main(outputs)
 
-            # Affichage de l'image
-            if not self.mode_expo:
-                self.draw_text()
-                self.draw_line()
-                cv2.imshow('posecolor', self.color_arr)
-
-            # Calcul du FPS, affichage toutes les 10 s
-            if time() - t0 > 10:
-                print("FPS =", int(nbr/10))
-                t0, nbr = time(), 0
-
-            k = cv2.waitKey(1)
-            # Space pour full screen or not
-            if k == 32:  # space
-                if not self.mode_expo:
-                    if self.full_screen == 1:
-                        self.full_screen = 0
-                    elif self.full_screen == 0:
-                        self.full_screen = 1
-                    self.set_window()
-            # Esc to  exit
-            if k == 27:
-                self.conn.send(['quit', 1])
-                self.loop = 0
-
-        # Du OpenCV propre
-        cv2.destroyAllWindows()
+            # Affichage
+            self.viewer()
 
 
 
@@ -635,24 +511,62 @@ def apply_brightness_contrast(img, brightness=0, contrast=0):
     return cal
 
 
-def get_moyenne(points_3D, indice):
+def get_center_2D(skelet):
+    center = []
+    for i in range(2):
+        center.append(get_moyenne(skelet, i))
+    return center
+
+
+def get_center_3D(skelets_3D):
+    """Retourne la liste des centres des squelettes 3D"""
+    centers = []
+    for skelet in skelets_3D:
+        if skelet != [None]*17:
+            center = []
+            for i in range(3):
+                center.append(get_moyenne(skelet, i))
+            centers.append(center)
+        else:
+            centers.append(None)
+
+    return centers
+
+
+def get_moyenne(points, indice):
     """Calcul la moyenne d'une coordonnée des points,
-    la profondeur est le 3 ème = z
+    la profondeur est le 3 ème = z, le y est la verticale
     indice = 0 pour x, 1 pour y, 2 pour z
     """
 
     somme = 0
     n = 0
     for i in range(17):
-        if points_3D[i]:
-            n += 1
-            somme += points_3D[i][indice]
+        if points[i]:
+            p = points[i][indice]
+            if p:
+                n += 1
+                somme += p
     if n != 0:
-        moyenne = somme/n
+        moyenne = int(somme/n)
     else:
         moyenne = None
 
     return moyenne
+
+
+def get_average_list_with_None(liste):
+    """Calcul de la moyenne des valeurs de la liste, sans tenir compte des None.
+    liste = list de int ou float
+    liste = [1, 2, None, ..., 10.0, None]
+
+    Retourne un float
+    Si la liste ne contient que des None, retourne None
+    """
+    # dtype permet d'accepter les None
+    liste_array = np.array(liste, dtype=np.float64)
+
+    return np.nanmean(liste_array)
 
 
 def posenet_realsense_run(conn, current_dir, config):

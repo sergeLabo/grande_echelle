@@ -42,17 +42,6 @@ class MainScreen(Screen):
         # Trop fort
         self.app = App.get_running_app()
 
-        # Pour envoyer les valeurs au child_conn
-        # [pose]
-        self.threshold = 0.5
-        self.around = 1
-
-        # [histopocene]
-        self.profondeur_mini = 1500
-        self.profondeur_maxi = 4000
-        self.d_lissage = 44
-        self.mode_expo = 0
-
         # Pour le Pipe
         self.p1_conn = None
         self.p2_conn = None
@@ -79,25 +68,35 @@ class MainScreen(Screen):
     def receive(self):
         while self.receive_loop:
             sleep(0.001)
-            # De posenet realsense
-            data1 = self.p1_conn.recv()
 
-            # Relais des depth et x
-            if data1[0] == 'from_realsense':
-                self.p2_conn.send(['depth', data1[1]])
-            if data1[0] == 'quit':
-                try:
-                    self.app.do_quit()
-                except:
-                    pass
+            # De posenet realsense
+            if self.p1_conn.poll():
+                data1 = self.p1_conn.recv()
+
+                # Relais des depth
+                if data1[0] == 'from_realsense':
+                    # # print("depth reçu dans Kivy", data1[1])
+                    self.p2_conn.send(['depth', data1[1]])
+
+                if data1[0] == 'quit':
+                    print("Quit reçu dans Kivy de Posenet Realsense ")
+                    self.p2_conn.send(['quit', 1])
+                    try:
+                        self.app.do_quit()
+                    except:
+                        pass
 
             # De grande echelle
-            data2 = self.p2_conn.recv()
-            if data2[0] == 'quit':
-                try:
-                    self.app.do_quit()
-                except:
-                    pass
+            if self.p2_conn.poll():
+                data2 = self.p2_conn.recv()
+
+                if data2[0] == 'quit':
+                    print("Quit reçu dans Kivy de Grande Echelle")
+                    self.p1_conn.send(['quit', 1])
+                    try:
+                        self.app.do_quit()
+                    except:
+                        pass
 
     def run_grande_echelle(self):
         if not self.enable:
@@ -132,14 +131,17 @@ class Reglage(Screen):
 
     brightness = NumericProperty(0)
     contrast = NumericProperty(0)
+    brightness_contrast_on = NumericProperty(0)
     threshold = NumericProperty(0.8)
     profondeur_mini = NumericProperty(1500)
     profondeur_maxi = NumericProperty(4000)
-    x_maxi = NumericProperty(500)
-    d_lissage = NumericProperty(50)
+    largeur_maxi = NumericProperty(500)
+    pile_size = NumericProperty(12)
+    lissage = NumericProperty(11)
     d_mode = NumericProperty(0)
     info = NumericProperty(0)
     mode_expo = NumericProperty(0)
+    slow_size = NumericProperty(0)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -148,16 +150,20 @@ class Reglage(Screen):
         self.app = App.get_running_app()
         self.brightness = float(self.app.config.get('pose', 'brightness'))
         self.contrast = float(self.app.config.get('pose', 'contrast'))
+        self.brightness_contrast_on = int(self.app.config.get('pose',
+                                                    'brightness_contrast_on'))
         self.threshold = float(self.app.config.get('pose', 'threshold'))
-        self.around = int(self.app.config.get('pose', 'around'))
         self.profondeur_mini = int(self.app.config.get('histopocene',
-                                                        'profondeur_mini'))
+                                                    'profondeur_mini'))
         self.profondeur_maxi = int(self.app.config.get('histopocene',
-                                                        'profondeur_maxi'))
-        self.x_maxi = int(self.app.config.get('histopocene', 'x_maxi'))
-        self.d_lissage = int(self.app.config.get('histopocene', 'd_lissage'))
+                                                    'profondeur_maxi'))
+        self.largeur_maxi = int(self.app.config.get('histopocene',
+                                                    'largeur_maxi'))
+        self.pile_size = int(self.app.config.get('histopocene', 'pile_size'))
+        self.lissage = int(self.app.config.get('histopocene', 'lissage'))
         self.info = int(self.app.config.get('histopocene', 'info'))
         self.mode_expo = int(self.app.config.get('histopocene', 'mode_expo'))
+        self.slow_size = int(self.app.config.get('histopocene', 'slow_size'))
 
         Clock.schedule_once(self.set_switch, 0.5)
 
@@ -168,6 +174,10 @@ class Reglage(Screen):
         """
         if self.mode_expo == 1:
             self.ids.mode_expo.active = 1
+        if self.info == 1:
+            self.ids.info.active = 1
+        if self.brightness_contrast_on == 1:
+            self.ids.brightness_contrast_on.active = 1
 
     def do_slider(self, iD, instance, value):
 
@@ -225,24 +235,57 @@ class Reglage(Screen):
             if scr.p2_conn:
                 scr.p2_conn.send(['profondeur_maxi', self.profondeur_maxi])
 
-        if iD == 'x_maxi':
-            self.x_maxi = int(value)
+        if iD == 'largeur_maxi':
+            self.largeur_maxi = int(value)
 
-            self.app.config.set('histopocene', 'x_maxi', self.x_maxi)
+            self.app.config.set('histopocene', 'largeur_maxi', self.largeur_maxi)
             self.app.config.write()
             if scr.p1_conn:
-                scr.p1_conn.send(['x_maxi', self.x_maxi])
+                scr.p1_conn.send(['largeur_maxi', self.largeur_maxi])
             if scr.p2_conn:
-                scr.p2_conn.send(['x_maxi', self.x_maxi])
+                scr.p2_conn.send(['largeur_maxi', self.largeur_maxi])
 
-        if iD == 'd_lissage':
-            self.d_lissage = int(value)
+        if iD == 'pile_size':
+            self.pile_size = int(value)
 
-            self.app.config.set('histopocene', 'd_lissage', self.d_lissage)
+            self.app.config.set('histopocene', 'pile_size', self.pile_size)
             self.app.config.write()
 
             if scr.p2_conn:
-                scr.p2_conn.send(['d_lissage', self.d_lissage])
+                scr.p2_conn.send(['pile_size', self.pile_size])
+
+        if iD == 'lissage':
+            self.lissage = int(value)
+            if self.lissage >= self.pile_size:
+                self.lissage = self.pile_size - 1
+            self.app.config.set('histopocene', 'lissage', self.lissage)
+            self.app.config.write()
+
+            if scr.p2_conn:
+                scr.p2_conn.send(['lissage', self.lissage])
+
+        if iD == 'slow_size':
+            self.slow_size = int(value)
+
+            self.app.config.set('histopocene', 'slow_size', self.slow_size)
+            self.app.config.write()
+
+            if scr.p2_conn:
+                scr.p2_conn.send(['slow_size', self.slow_size])
+
+    def on_switch_brightness_contrast_on(self, instance, value):
+        scr = self.app.screen_manager.get_screen('Main')
+        if value:
+            value = 1
+        else:
+            value = 0
+        self.brightness_contrast_on = value
+        if scr.p1_conn:
+            scr.p1_conn.send(['brightness_contrast_on', self.brightness_contrast_on])
+        self.app.config.set('histopocene', 'brightness_contrast_on',
+                                        self.brightness_contrast_on)
+        self.app.config.write()
+        print("brightness_contrast_on =", self.brightness_contrast_on)
 
     def on_switch_info(self, instance, value):
         scr = self.app.screen_manager.get_screen('Main')
@@ -253,8 +296,6 @@ class Reglage(Screen):
         self.info = value
         if scr.p2_conn:
             scr.p2_conn.send(['info', self.info])
-        if scr.p1_conn:
-            scr.p1_conn.send(['info', self.info])
         self.app.config.set('histopocene', 'info', self.info)
         self.app.config.write()
         print("info =", self.info)
@@ -317,19 +358,21 @@ class Grande_EchelleApp(App):
         config.setdefaults( 'pose',
                                         {   'brightness': 0,
                                             'contrast': 0,
-                                            'threshold': 0.80,
-                                            'around': 1 })
+                                            'brightness_contrast_on': 0,
+                                            'threshold': 0.80})
 
         config.setdefaults( 'histopocene',
                                         {   'frame_rate_du_film': 25,
-                                            'film': 'ge_1920_25_moy.mp4',
+                                            'film': 'ICOS.mp4',
                                             'profondeur_mini': 1500,
                                             'profondeur_maxi': 4000,
-                                            'x_maxi': 500,
-                                            'd_lissage': 50,
-                                            'mode_expo': 25,
-                                            'info': 0})
-
+                                            'largeur_maxi': 500,
+                                            'pile_size': 16,
+                                            'lissage': 11,
+                                            'full_screen': 0,
+                                            'mode_expo': 0,
+                                            'brightness_contrast_on': 0,
+                                            'slow_size': 8})
         print("self.config peut maintenant être appelé")
 
     def build_settings(self, settings):
@@ -341,129 +384,16 @@ class Grande_EchelleApp(App):
 
         print("Construction de l'écran Options")
 
-        data = """[
-                    {"type": "title", "title": "Camera RealSense"},
-
-                        {   "type": "numeric",
-                            "title": "Largeur de l'image caméra",
-                            "desc": "1280 ou 640",
-                            "section": "camera", "key": "width_input"},
-
-                        {   "type": "numeric",
-                            "title": "Hauteur de l'image caméra",
-                            "desc": "720 ouy 480",
-                            "section": "camera", "key": "height_input"},
-
-                    {"type": "title", "title": "Détection des squelettes"},
-                        {   "type": "numeric",
-                            "title": "Seuil de confiance pour la detection d'un keypoint",
-                            "desc": "0.01 à 0.99",
-                            "section": "pose", "key": "threshold"},
-                        {   "type": "numeric",
-                            "title": "Nombre de pixels autour du point pour le calcul de la profondeur",
-                            "desc": "Entier de 1 à 5",
-                            "section": "pose", "key": "around"},
-
-                    {"type": "title", "title": "Histopocene"},
+        data = """[ {"type": "title", "title": "Histopocene"},
 
                         {   "type": "string",
                             "title": "Nom du film",
                             "desc": "Nom du fichier du fiml avecextension, sans chemin",
-                            "section": "histopocene", "key": "film"},
-
-                        {   "type": "numeric",
-                            "title": "Frame Rate du film",
-                            "desc": "1 à 30",
-                            "section": "histopocene", "key": "frame_rate_du_film"},
-
-                        {   "type": "numeric",
-                            "title": "Profondeur de détection mini",
-                            "desc": "De 500 à 2000",
-                            "section": "histopocene", "key": "profondeur_mini"},
-
-                        {   "type": "numeric",
-                            "title": "Profondeur de détection maxi",
-                            "desc": "De 3000 à 8000",
-                            "section": "histopocene", "key": "profondeur_maxi"},
-
-                        {   "type": "numeric",
-                            "title": "X maxi par rapport à l'axe",
-                            "desc": "De 100 à 2000",
-                            "section": "histopocene", "key": "x_maxi"},
-
-                        {   "type": "numeric",
-                            "title": "Coefficient de lissage de la profondeur",
-                            "desc": "De 10 à 120",
-                            "section": "histopocene", "key": "d_lissage"},
-
-                        {   "type": "numeric",
-                            "title": "Mode Expo",
-                            "desc": "0 ou 1",
-                            "section": "histopocene", "key": "mode_expo"},
-
-                        {   "type": "numeric",
-                            "title": "Affichage des infos",
-                            "desc": "0 ou 1",
-                            "section": "histopocene", "key": "info"}
-                   ]"""
+                            "section": "histopocene", "key": "film"}
+                    ]"""
 
         # self.config est le config de build_config
         settings.add_json_panel('Grande_Echelle', self.config, data=data)
-
-    def on_config_change(self, config, section, key, value):
-        """Si modification des options, fonction appelée automatiquement
-        menu = self.screen_manager.get_screen("Main")
-        Seul les rébglages à chaud sont définis ici !
-        """
-
-        if config is self.config:
-            token = (section, key)
-
-            if token == ('pose', 'threshold'):
-                if value < 0: value = 0
-                if value > 0.99: value = 0.99
-                self.threshold = value
-                self.config.set('pose', 'threshold', self.threshold)
-
-            if token == ('pose', 'around'):
-                if value < 1: value = 1
-                if value > 5: value = 5
-                self.around = value
-                self.config.set('pose', 'around', self.around)
-
-            if token == ('histopocene', 'profondeur_mini'):
-                if value < 500: value = 500
-                if value > 2000: value = 2000
-                self.profondeur_mini = value
-                self.config.set('histopocene', 'profondeur_mini', self.profondeur_mini)
-
-            if token == ('histopocene', 'profondeur_maxi'):
-                if value < 3000: value = 3000
-                if value > 8000: value = 8000
-                self.profondeur_maxi = value
-                self.config.set('histopocene', 'profondeur_maxi', self.profondeur_maxi)
-
-            if token == ('histopocene', 'x_maxi'):
-                if value < 100: value = 100
-                if value > 2000: value = 2000
-                self.x_maxi = value
-                self.config.set('histopocene', 'x_maxi', self.x_maxi)
-
-            if token == ('histopocene', 'd_lissage'):
-                if value < 10: value = 10
-                if value > 120: value = 120
-                self.d_lissage = int(value)
-                self.config.set('histopocene', 'd_lissage', self.d_lissage)
-
-            if token == ('histopocene', 'mode_expo'):
-                if value in [0, 1]:
-                    self.mode_expo = value
-                    self.config.set('histopocene', 'mode_expo', self.mode_expo)
-
-            if token == ('histopocene', 'info'):
-                if value in [0, 1]:
-                    self.info = value
-                    self.config.set('histopocene', 'info', self.info)
 
     def go_mainscreen(self):
         """Retour au menu principal depuis les autres écrans."""

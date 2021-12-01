@@ -2,7 +2,7 @@
 Version=1.0
 Type=Application
 Terminal=true
-Icon=terminator
+Icon=/usr/share/icons/mate/scalable/actions/document-revert-symbolic-rtl.svg
 Icon[fr_FR]=terminator
 Name[fr_FR]=grande-echelle
 Exec=sh /media/data/3D/projets/grande_echelle/run_grande_echelle_gui.sh
