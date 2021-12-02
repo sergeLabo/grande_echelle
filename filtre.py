@@ -24,6 +24,11 @@ def moving_average(x, n, type_='simple'):
 
     return a_liss
 
+def get_a_b(x1, y1, x2, y2):
+    a = (y1 - y2)/(x1 - x2)
+    b = y1 - a*x1
+    return a, b
+
 
 if __name__ == '__main__':
 
@@ -71,9 +76,52 @@ if __name__ == '__main__':
     ax.plot(x, y1, color='r')
 
     x1 = [i+5 for i in x]
+
+    histo = [0]*32
+    yf = []
+    for d in data:
+        histo.append(d)
+        del histo[0]
+
+        try:
+            d = int(moving_average( np.array(histo),
+                                    31,
+                                    type_='simple')[0])
+        except:
+            print("Erreur moving_average depth")
+
+        # Pour bien comprendre
+        mini = 1000 + 100
+        maxi = 8000 - 300
+        lenght = 39750
+
+        # Voir le dessin
+        a, b = get_a_b(mini, 0, maxi, lenght)
+        frame = int(a*d + b)
+
+        # Inversion de la video
+        frame = lenght - frame
+        # Pour ne jamais planté
+        if frame < 0:
+            frame = 0
+        if frame >= lenght:
+            frame = lenght - 1
+        # # # Pile des 8 dernières valeurs lissées
+        # # self.histo_slow.append(frame)
+        # # del self.histo_slow[0]
+        # # try:
+            # # frame = int(moving_average( np.array(self.histo_slow),
+                                        # # self.slow_size - 1,
+                                        # # type_='simple')[0])
+        # # except:
+            # # print("Erreur moving_average depth")
+        # # print(frame, self.histo_slow)
+        yf.append(frame)
+    y1 = yf[:200]
+
     # # ax.plot(x1, average5, color='b')
     ax.plot(x1, average2, color='m')
     ax.plot(x1, average3, color='g')
-    # # ax.plot(x1, average11, color='k')
+    ax.plot(x1, y1, color='k')
 
     plt.show()

@@ -1,5 +1,7 @@
 
 #  160 frame pour 12 000 ans
+# 39750 frame pour 300 cm
+# 1 cm pour 132 frames
 
 # Echap pour finir proprement le script
 # Espace pour bascule, plein écran / normal
@@ -211,21 +213,22 @@ class GrandeEchelle(GrandeEchelleViewer):
             print("Erreur moving_average depth")
 
         # Pour bien comprendre
-        mini = self.profondeur_mini + 100
-        maxi = self.profondeur_maxi - 300
+        mini = self.profondeur_mini + 100  # frame 0 si mini
+        maxi = self.profondeur_maxi - 300  # frame lenght si maxi
         lenght = self.lenght
 
         # Voir le dessin
+        # (x1, y1, x2, y2) = (mini, 0, maxi, lenght)
         a, b = get_a_b(mini, 0, maxi, lenght)
         frame = int(a*depth + b)
 
         # Inversion de la video
-        frame = self.lenght - frame
+        frame = lenght - frame
         # Pour ne jamais planté
         if frame < 0:
             frame = 0
-        if frame >= self.lenght:
-            frame = self.lenght - 1
+        if frame >= lenght:
+            frame = lenght - 1
 
 
         print(frame)
