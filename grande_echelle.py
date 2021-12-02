@@ -1,8 +1,4 @@
 
-#  160 frame pour 12 000 ans
-# 39750 frame pour 300 cm
-# 1 cm pour 132 frames
-
 # Echap pour finir proprement le script
 # Espace pour bascule, plein écran / normal
 
@@ -200,6 +196,9 @@ class GrandeEchelle(GrandeEchelleViewer):
     def get_frame(self, depth):
         """ Appelé à chaque réception de depth dans receive 'depth',
         longueur en mm
+        160 frame pour 12 000 ans
+        39750 frame pour 300 cm
+        1 cm pour 132 frames
         """
         # Mise à jour de la pile
         self.histo.append(depth)
