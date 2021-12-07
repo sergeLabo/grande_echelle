@@ -31,7 +31,7 @@ Les distances en 3D sont en mm, comme dans grande echelle!
 """
 
 
-# # import os
+import os
 from time import time, sleep
 from threading import Thread
 
@@ -49,14 +49,9 @@ from my_config import MyConfig
 from filtre import moving_average
 
 
-global POSE_LOOP
-POSE_LOOP = 1
-
-
 
 class PosenetRealsenseViewer:
     """Affichage dans une fenêtre OpenCV, et gestion des fenêtres"""
-    global POSE_LOOP
 
     def __init__(self, conn, config):
 
@@ -95,7 +90,6 @@ class PosenetRealsenseViewer:
                                  (255, 255, 255), 2)
 
     def viewer(self):
-        global POSE_LOOP
 
         # ############### Affichage de l'image
         # La ligne au centre
@@ -123,12 +117,8 @@ class PosenetRealsenseViewer:
         # Pour quitter
         if k == 27:  # Esc
             self.conn.send(['quit', 1])
-            POSE_LOOP = 0
             print("Quit envoyé de Posenet Realsense")
-            self.close()
-
-    def close(self):
-        cv2.destroyAllWindows()
+            cv2.destroyAllWindows()
 
 
 
@@ -140,7 +130,6 @@ class PosenetRealsense(MyRealSense, MyPosenet, PosenetRealsenseViewer):
         La profondeur est le 3ème dans les coordonnées d'un point 3D,
         x = horizontale, y = verticale
     """
-    global POSE_LOOP
 
     def __init__(self, conn, current_dir, config):
         """Les paramètres sont à définir dans le fichier posenet.ini
@@ -155,10 +144,11 @@ class PosenetRealsense(MyRealSense, MyPosenet, PosenetRealsenseViewer):
         self.conn = conn
         self.current_dir = current_dir
 
-        self.conn_loop = 1
+        self.pose_loop = 1
+        self.pose_conn_loop = 1
 
         if self.conn:
-            self.receive_thread()
+            self.pose_receive_thread()
 
         self.config = config
 
@@ -185,22 +175,20 @@ class PosenetRealsense(MyRealSense, MyPosenet, PosenetRealsenseViewer):
         self.full_screen = int(self.config['histopocene']['full_screen'])
         self.mode_expo = int(self.config['histopocene']['mode_expo'])
 
-    def receive_thread(self):
+    def pose_receive_thread(self):
         print("Lancement du thread receive dans posenet")
-        t = Thread(target=self.receive)
+        t = Thread(target=self.pose_receive)
         t.start()
 
-    def receive(self):
-        global POSE_LOOP
-        while self.conn_loop:
+    def pose_receive(self):
+        while self.pose_conn_loop:
             data = self.conn.recv()
 
             if data:
                 if data[0] == 'quit':
                     print("Alerte: Quit reçu dans PosenetRealsense")
-                    POSE_LOOP = 0
-                    self.conn_loop = 0
-                    os._exit(0)
+                    self.pose_conn_loop = 0
+                    self.pose_loop = 0
 
                 elif data[0] == 'threshold':
                     print('threshold reçu dans posenet:', data[1])
@@ -230,7 +218,7 @@ class PosenetRealsense(MyRealSense, MyPosenet, PosenetRealsenseViewer):
                     print('mode_expo reçu dans posenet:', data[1])
                     self.mode_expo = data[1]
 
-            sleep(0.001)
+            sleep(0.01)
 
     def main(self, outputs):
         """ Appelé depuis la boucle infinie, c'est le main d'une frame."""
@@ -443,12 +431,11 @@ class PosenetRealsense(MyRealSense, MyPosenet, PosenetRealsenseViewer):
 
     def run(self):
         """Boucle infinie, quitter avec Echap dans la fenêtre OpenCV"""
-        global POSE_LOOP
 
         t0 = time()
         self.nbr = 0
 
-        while POSE_LOOP:
+        while self.pose_loop:
             self.nbr += 1
 
             # ############### RealSense

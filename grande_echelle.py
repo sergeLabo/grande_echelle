@@ -122,7 +122,7 @@ class GrandeEchelle(GrandeEchelleViewer):
         self.frame = 0
 
         if self.conn:
-            self.receive_thread()
+            self.ge_receive_thread()
 
         film = str(current_dir) + "/" + self.config['histopocene']['film']
         print("Le film est:", film)
@@ -144,11 +144,11 @@ class GrandeEchelle(GrandeEchelleViewer):
         self.slow_size = int(self.config['histopocene']['slow_size'])
         self.histo_slow = [0]*self.slow_size
 
-    def receive_thread(self):
-        t = Thread(target=self.receive)
+    def ge_receive_thread(self):
+        t = Thread(target=self.ge_receive)
         t.start()
 
-    def receive(self):
+    def ge_receive(self):
         global GE_LOOP
 
         while self.ge_conn_loop:
@@ -192,9 +192,9 @@ class GrandeEchelle(GrandeEchelleViewer):
                     print("Alerte: Quit reçu dans Grande Echelle")
                     GE_LOOP = 0
                     self.ge_conn_loop = 0
-                    os._exit(0)
+                    # # os._exit(0)
 
-            sleep(0.001)
+            sleep(0.01)
 
     def get_frame(self, depth):
         """ Appelé à chaque réception de depth dans receive 'depth',

@@ -63,41 +63,55 @@ class MainScreen(Screen):
         self.ids.run.state = "down"
         self.run_grande_echelle()
 
-    def receive_thread(self):
-        t = Thread(target=self.receive)
+    def kivy_receive_thread(self):
+        t = Thread(target=self.kivy_receive)
         t.start()
 
-    def receive(self):
+    def kivy_receive(self):
         while self.kivy_receive_loop:
-            sleep(0.001)
+            sleep(0.01)
 
             # De posenet realsense
             if self.p1_conn is not None:
                 if self.p1_conn.poll():
-                    data1 = self.p1_conn.recv()
+                    try:
+                        data1 = self.p1_conn.recv()
+                    except:
+                        data1 = None
 
-                    # Relais des depth
-                    if data1[0] == 'from_realsense':
-                        self.p2_conn.send(['depth', data1[1]])
+                    if data1 is not None:
+                        # Relais des depth
+                        if data1[0] == 'from_realsense':
+                            self.p2_conn.send(['depth', data1[1]])
 
-                    if data1[0] == 'quit':
-                        print("\nQuit reçu dans Kivy de Posenet Realsense ")
-                        self.p2_conn.send(['quit', 1])
-                        self.kivy_receive_loop = 0
-                        # # os._exit(0)
-                        self.app.do_quit()
+                        if data1[0] == 'quit':
+                            print("\nQuit reçu dans Kivy de Posenet Realsense ")
+                            self.p2_conn.send(['quit', 1])
+                            self.p1_conn.send(['quit', 1])
+                            self.kivy_receive_loop = 0
+                            sleep(0.5)
+                            self.p1.terminate()
+                            self.p2.terminate()
+                            self.app.do_quit()
 
             # De grande echelle
             if self.p2_conn is not None:
                 if self.p2_conn.poll():
-                    data2 = self.p2_conn.recv()
+                    try:
+                        data2 = self.p2_conn.recv()
+                    except:
+                        data2 = None
 
-                    if data2[0] == 'quit':
-                        print("\nQuit reçu dans Kivy de Grande Echelle")
-                        self.p1_conn.send(['quit', 1])
-                        self.kivy_receive_loop = 0
-                        # # os._exit(0)
-                        self.app.do_quit()
+                    if data2 is not None:
+                        if data2[0] == 'quit':
+                            print("\nQuit reçu dans Kivy de Grande Echelle")
+                            self.p1_conn.send(['quit', 1])
+                            self.p2_conn.send(['quit', 1])
+                            self.kivy_receive_loop = 0
+                            sleep(0.5)
+                            self.p1.terminate()
+                            self.p2.terminate()
+                            self.app.do_quit()
 
     def run_grande_echelle(self):
         if not self.enable:
@@ -123,7 +137,7 @@ class MainScreen(Screen):
             print("Histopocene lancé ...")
 
             self.enable = True
-            self.receive_thread()
+            self.kivy_receive_thread()
             print("Ca tourne ...")
 
 
@@ -404,29 +418,26 @@ class Grande_EchelleApp(App):
     def do_quit(self):
         print("Je quitte proprement, j'attends ....")
 
-        sleep(2)
+        # # sleep(0.5)
 
         # Fin du processus fils
-        scr = self.screen_manager.get_screen('Main')
+        # # scr = self.screen_manager.get_screen('Main')
 
         # Fin du thread
-        scr.receive_loop = 0
+        # # scr.kivy_receive_loop = 0
 
         # Fin des Pipe
-        scr.p1_conn = None
-        scr.p2_conn = None
+        # # scr.p1_conn = None
+        # # scr.p2_conn = None
 
-        # Fin des process
-        scr.p1.terminate()
-        scr.p2.terminate()
+        # # # Fin des process
+        # # scr.p1.terminate()
+        # # scr.p2.terminate()
 
         # Kivy
-        sleep(1)
         print("Quit final")
         Grande_EchelleApp.get_running_app().stop()
-        # # stopTouchApp()
-        sys.exit()
-        os._exit(0)
+
 
 
 
