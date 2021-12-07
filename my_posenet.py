@@ -54,12 +54,12 @@ class MyPosenet:
                  f'{model_size[0]}_{model_size[1]}'
                  f'_quant_decoder_edgetpu.tflite'   )
         print('Loading model: ', model)
-        self.engine = PoseEngine(model, mirror=False)
-        # # try:
-            # # self.engine = PoseEngine(model, mirror=False)
-        # # except:
-            # # print(f"Pas de Stick Coral connecté")
-            # # os._exit(0)
+
+        try:
+            self.engine = PoseEngine(model, mirror=False)
+        except:
+            print("\n\nPas de Stick Coral connecté\n\n")
+            os._exit(0)
 
     def get_outputs(self, color_arr):
         outputs, inference_time = self.engine.DetectPosesInImage(color_arr)

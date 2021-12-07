@@ -3,7 +3,7 @@
 Interface graphique pour Grande Echelle
 """
 
-import os
+import os, sys
 from time import sleep
 from pathlib import Path
 from multiprocessing import Process, Pipe
@@ -12,7 +12,9 @@ from threading import Thread
 import kivy
 kivy.require('2.0.0')
 
+# # from kivy.base import stopTouchApp
 from kivy.core.window import Window
+
 k = 1.4
 WS = (int(640*k), int(640*k))
 Window.size = WS
@@ -45,7 +47,7 @@ class MainScreen(Screen):
         # Pour le Pipe
         self.p1_conn = None
         self.p2_conn = None
-        self.receive_loop = 1
+        self.kivy_receive_loop = 1
 
         # Pour ne lancer qu'une fois les processus
         self.enable = False
@@ -66,37 +68,36 @@ class MainScreen(Screen):
         t.start()
 
     def receive(self):
-        while self.receive_loop:
+        while self.kivy_receive_loop:
             sleep(0.001)
 
             # De posenet realsense
-            if self.p1_conn.poll():
-                data1 = self.p1_conn.recv()
+            if self.p1_conn is not None:
+                if self.p1_conn.poll():
+                    data1 = self.p1_conn.recv()
 
-                # Relais des depth
-                if data1[0] == 'from_realsense':
-                    # # print("depth reçu dans Kivy", data1[1])
-                    self.p2_conn.send(['depth', data1[1]])
+                    # Relais des depth
+                    if data1[0] == 'from_realsense':
+                        self.p2_conn.send(['depth', data1[1]])
 
-                if data1[0] == 'quit':
-                    print("Quit reçu dans Kivy de Posenet Realsense ")
-                    self.p2_conn.send(['quit', 1])
-                    try:
+                    if data1[0] == 'quit':
+                        print("\nQuit reçu dans Kivy de Posenet Realsense ")
+                        self.p2_conn.send(['quit', 1])
+                        self.kivy_receive_loop = 0
+                        # # os._exit(0)
                         self.app.do_quit()
-                    except:
-                        pass
 
             # De grande echelle
-            if self.p2_conn.poll():
-                data2 = self.p2_conn.recv()
+            if self.p2_conn is not None:
+                if self.p2_conn.poll():
+                    data2 = self.p2_conn.recv()
 
-                if data2[0] == 'quit':
-                    print("Quit reçu dans Kivy de Grande Echelle")
-                    self.p1_conn.send(['quit', 1])
-                    try:
+                    if data2[0] == 'quit':
+                        print("\nQuit reçu dans Kivy de Grande Echelle")
+                        self.p1_conn.send(['quit', 1])
+                        self.kivy_receive_loop = 0
+                        # # os._exit(0)
                         self.app.do_quit()
-                    except:
-                        pass
 
     def run_grande_echelle(self):
         if not self.enable:
@@ -107,18 +108,18 @@ class MainScreen(Screen):
 
             # Posenet et Realsense
             self.p1_conn, child_conn1 = Pipe()
-            p1 = Process(target=posenet_realsense_run, args=(child_conn1,
+            self.p1 = Process(target=posenet_realsense_run, args=(child_conn1,
                                                              current_dir,
                                                              self.app.config, ))
-            p1.start()
+            self.p1.start()
             print("Posenet Realsense lancé ...")
 
             # Grande Echelle
             self.p2_conn, child_conn2 = Pipe()
-            p2 = Process(target=grande_echelle_run, args=(child_conn2,
+            self.p2 = Process(target=grande_echelle_run, args=(child_conn2,
                                                           current_dir,
                                                           self.app.config, ))
-            p2.start()
+            self.p2.start()
             print("Histopocene lancé ...")
 
             self.enable = True
@@ -324,6 +325,7 @@ SCREENS = { 0: (MainScreen, 'Main'),
             1: (Reglage, 'Reglage')}
 
 
+
 class Grande_EchelleApp(App):
     """Construction de l'application. Exécuté par if __name__ == '__main__':,
     app est le parent de cette classe dans kv
@@ -400,23 +402,32 @@ class Grande_EchelleApp(App):
         self.screen_manager.current = ("Main")
 
     def do_quit(self):
-        print("Je quitte proprement")
+        print("Je quitte proprement, j'attends ....")
+
+        sleep(2)
 
         # Fin du processus fils
         scr = self.screen_manager.get_screen('Main')
-        if scr.p1_conn:
-            scr.p1_conn.send(['quit'])
-        if scr.p2_conn:
-            scr.p2_conn.send(['quit'])
 
         # Fin du thread
         scr.receive_loop = 0
 
-        # Kivy
-        Grande_EchelleApp.get_running_app().stop()
+        # Fin des Pipe
+        scr.p1_conn = None
+        scr.p2_conn = None
 
-        # Extinction forcée de tout, si besoin
+        # Fin des process
+        scr.p1.terminate()
+        scr.p2.terminate()
+
+        # Kivy
+        sleep(1)
+        print("Quit final")
+        Grande_EchelleApp.get_running_app().stop()
+        # # stopTouchApp()
+        sys.exit()
         os._exit(0)
+
 
 
 

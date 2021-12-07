@@ -177,7 +177,6 @@
                     on_value: root.do_slider('threshold', *args)
 
                 BoxLayout: # une boite texte et affichage profondeur_mini
-
                     orientation: 'horizontal'
                     Label:  # profondeur_mini
                         text: 'Profondeur mini'
@@ -197,7 +196,6 @@
                     on_value: root.do_slider('profondeur_mini', *args)
 
                 BoxLayout: # une boite texte et affichage profondeur_maxi
-
                     orientation: 'horizontal'
                     Label:  # profondeur_maxi
                         text: 'Profondeur maxi'
@@ -217,7 +215,6 @@
                     on_value: root.do_slider('profondeur_maxi', *args)
 
                 BoxLayout: # une boite texte et affichage x maxi
-
                     orientation: 'horizontal'
                     Label:  # largeur_maxi
                         text: 'Largeur maxi'
@@ -237,7 +234,6 @@
                     on_value: root.do_slider('largeur_maxi', *args)
 
                 BoxLayout: # une boite texte et affichage pile size
-
                     orientation: 'horizontal'
                     Label:  # pile size
                         text: 'Taille de la pile de profondeur'
@@ -257,7 +253,6 @@
                     on_value: root.do_slider('pile_size', *args)
 
                 BoxLayout: # une boite texte et affichage lissage
-
                     orientation: 'horizontal'
                     Label:  # lissage
                         text: 'Coefficient de lissage'
@@ -290,7 +285,7 @@
                 Slider:  # pile sizelissage
                     id: slow_size
                     orientation: 'horizontal'
-                    range: 1, 30
+                    range: 1, 60
                     step: 1
                     value: root.slow_size
                     value_position: root.slow_size

@@ -31,7 +31,7 @@ Les distances en 3D sont en mm, comme dans grande echelle!
 """
 
 
-import os
+# # import os
 from time import time, sleep
 from threading import Thread
 
@@ -49,15 +49,19 @@ from my_config import MyConfig
 from filtre import moving_average
 
 
+global POSE_LOOP
+POSE_LOOP = 1
+
+
 
 class PosenetRealsenseViewer:
     """Affichage dans une fenêtre OpenCV, et gestion des fenêtres"""
+    global POSE_LOOP
 
     def __init__(self, conn, config):
 
         self.conn = conn
         self.config = config
-        self.loop = 1
         self.t0 = time()
 
         self.mode_expo = int(self.config['histopocene']['mode_expo'])
@@ -65,7 +69,6 @@ class PosenetRealsenseViewer:
         if self.mode_expo:
             self.info = 0
             self.full_screen = 0
-
         self.create_window()
 
     def create_window(self):
@@ -92,6 +95,8 @@ class PosenetRealsenseViewer:
                                  (255, 255, 255), 2)
 
     def viewer(self):
+        global POSE_LOOP
+
         # ############### Affichage de l'image
         # La ligne au centre
         self.draw_line()
@@ -105,13 +110,21 @@ class PosenetRealsenseViewer:
             self.t0, self.nbr = time(), 0
 
         k = cv2.waitKey(1)
+
+        # Space pour full screen or not
+        if k == 32:  # space
+            if not self.mode_expo:
+                if self.full_screen == 1:
+                    self.full_screen = 0
+                elif self.full_screen == 0:
+                    self.full_screen = 1
+                self.set_window()
+
         # Pour quitter
         if k == 27:  # Esc
             self.conn.send(['quit', 1])
-            self.loop = 0
-            # # self.conn_loop = 0
-            print("Quit dans Posenet Realsense")
-
+            POSE_LOOP = 0
+            print("Quit envoyé de Posenet Realsense")
             self.close()
 
     def close(self):
@@ -127,11 +140,13 @@ class PosenetRealsense(MyRealSense, MyPosenet, PosenetRealsenseViewer):
         La profondeur est le 3ème dans les coordonnées d'un point 3D,
         x = horizontale, y = verticale
     """
+    global POSE_LOOP
 
     def __init__(self, conn, current_dir, config):
         """Les paramètres sont à définir dans le fichier posenet.ini
         En principe, rien ne doit être modifié dans les autres paramètres.
         """
+
         print("Lancement de PosenetRealsense")
 
         MyRealSense.__init__(self, config)
@@ -140,7 +155,6 @@ class PosenetRealsense(MyRealSense, MyPosenet, PosenetRealsenseViewer):
         self.conn = conn
         self.current_dir = current_dir
 
-        self.loop = 1
         self.conn_loop = 1
 
         if self.conn:
@@ -177,45 +191,42 @@ class PosenetRealsense(MyRealSense, MyPosenet, PosenetRealsenseViewer):
         t.start()
 
     def receive(self):
+        global POSE_LOOP
         while self.conn_loop:
             data = self.conn.recv()
 
             if data:
-                if data[0] == 'quit':  # il doit être en premier
-                    print("Quit reçu dans PosenetRealsense")
-                    self.loop = 0
+                if data[0] == 'quit':
+                    print("Alerte: Quit reçu dans PosenetRealsense")
+                    POSE_LOOP = 0
                     self.conn_loop = 0
                     os._exit(0)
 
-                if data[0] == 'threshold':
+                elif data[0] == 'threshold':
                     print('threshold reçu dans posenet:', data[1])
                     self.threshold = data[1]
 
-                if data[0] == 'brightness':
+                elif data[0] == 'brightness':
                     print('brightness reçu dans posenet:', data[1])
                     self.brightness = data[1]
 
-                if data[0] == 'contrast':
+                elif data[0] == 'contrast':
                     print('contrast reçu dans posenet:', data[1])
                     self.contrast = data[1]
 
-                if data[0] == 'brightness_contrast_on':
-                    print('brightness_contrast_on reçu dans posenet:', data[1])
-                    self.brightness_contrast_on = data[1]
-
-                if data[0] == 'profondeur_mini':
+                elif data[0] == 'profondeur_mini':
                     print('profondeur_mini reçu dans posenet::', data[1])
                     self.profondeur_mini = data[1]
 
-                if data[0] == 'profondeur_maxi':
+                elif data[0] == 'profondeur_maxi':
                     print('profondeur_maxi reçu dans posenet::', data[1])
                     self.profondeur_maxi = data[1]
 
-                if data[0] == 'largeur_maxi':
+                elif data[0] == 'largeur_maxi':
                     print('largeur_maxi reçu dans posenet:', data[1])
                     self.largeur_maxi = data[1]
 
-                if data[0] == 'mode_expo':
+                elif data[0] == 'mode_expo':
                     print('mode_expo reçu dans posenet:', data[1])
                     self.mode_expo = data[1]
 
@@ -432,11 +443,12 @@ class PosenetRealsense(MyRealSense, MyPosenet, PosenetRealsenseViewer):
 
     def run(self):
         """Boucle infinie, quitter avec Echap dans la fenêtre OpenCV"""
+        global POSE_LOOP
 
         t0 = time()
         self.nbr = 0
 
-        while self.loop:
+        while POSE_LOOP:
             self.nbr += 1
 
             # ############### RealSense

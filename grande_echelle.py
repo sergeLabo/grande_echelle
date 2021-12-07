@@ -16,14 +16,19 @@ from filtre import moving_average
 from my_config import MyConfig
 
 
+global GE_LOOP
+GE_LOOP = 1
+
+
+
 class GrandeEchelleViewer:
     """Affichage dans une fenêtre OpenCV, et gestion des fenêtres"""
+    global GE_LOOP
 
     def __init__(self, conn, config):
 
         self.conn = conn
         self.config = config
-        self.loop = 1
 
         freq = int(self.config['histopocene']['frame_rate_du_film'])
         if freq != 0:
@@ -62,8 +67,9 @@ class GrandeEchelleViewer:
 
     def run(self):
         """Boucle infinie du script"""
+        global GE_LOOP
 
-        while self.loop:
+        while GE_LOOP:
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.frame)
             ret, img = self.video.read()
 
@@ -89,9 +95,8 @@ class GrandeEchelleViewer:
             # Esc to  exit
             if k == 27:
                 self.conn.send(['quit', 1])
-                print("Quit dans Grande Echelle")
-                self.loop = 0
-                # # self.conn_loop = 0
+                print("Quit envoyé de Grande Echelle")
+                GE_LOOP = 0
 
         self.video.release()
         cv2.destroyAllWindows()
@@ -103,6 +108,7 @@ class GrandeEchelle(GrandeEchelleViewer):
     en fonction de la réception de la profondeur
     avec conn de multiprocess.
     """
+    global GE_LOOP
 
     def __init__(self, conn, current_dir, config):
 
@@ -112,7 +118,7 @@ class GrandeEchelle(GrandeEchelleViewer):
         # Fenêtres OpenCV
         GrandeEchelleViewer.__init__(self, conn, config)
 
-        self.conn_loop = 1
+        self.ge_conn_loop = 1
         self.frame = 0
 
         if self.conn:
@@ -143,53 +149,50 @@ class GrandeEchelle(GrandeEchelleViewer):
         t.start()
 
     def receive(self):
-        while self.conn_loop:
+        global GE_LOOP
+
+        while self.ge_conn_loop:
             if self.conn.poll():
                 data = self.conn.recv()
-
-                if data[0] == 'quit':  # il doit être en premier
-                    self.loop = 0
-                    self.conn_loop = 0
-                    os._exit(0)
-
                 if data[0] == 'depth':
-                    # # print("depth reçu dans grande échelle", data[1])
                     if data[1]:
                         self.get_frame(data[1])
 
-                if data[0] == 'info':
+                elif data[0] == 'info':
                     self.info = data[1]
                     print("info reçu dans grande echelle:", self.info)
 
-                if data[0] == 'profondeur_mini':
+                elif data[0] == 'profondeur_mini':
                     self.profondeur_mini = data[1]
                     print("profondeur_mini reçu dans grande echelle:", self.profondeur_mini)
 
-                if data[0] == 'profondeur_maxi':
+                elif data[0] == 'profondeur_maxi':
                     self.profondeur_maxi = data[1]
                     print("profondeur_maxi reçu dans grande echelle:", self.profondeur_maxi)
 
-                if data[0] == 'largeur_maxi':
+                elif data[0] == 'largeur_maxi':
                     self.largeur_maxi = data[1]
                     print("largeur_maxi reçu dans grande echelle:", self.largeur_maxi)
 
-                if data[0] == 'mode_expo':
+                elif data[0] == 'mode_expo':
                     self.mode_expo = data[1]
                     print("info reçu dans grande echelle:", self.mode_expo)
                     if self.mode_expo:
                         self.info = 0
 
-                if data[0] == 'pile_size':
+                elif data[0] == 'pile_size':
                     self.pile_size = data[1]
                     print("pile_size reçu dans grande echelle:", self.pile_size)
 
-                if data[0] == 'lissage':
+                elif data[0] == 'lissage':
                     self.lissage = data[1]
                     print("lissage reçu dans grande echelle:", self.lissage)
 
-                if data[0] == 'slow_size':
-                    self.slow_size = data[1]
-                    print("slow_size reçu dans grande echelle:", self.slow_size)
+                elif data[0] == 'quit':
+                    print("Alerte: Quit reçu dans Grande Echelle")
+                    GE_LOOP = 0
+                    self.ge_conn_loop = 0
+                    os._exit(0)
 
             sleep(0.001)
 
@@ -218,19 +221,15 @@ class GrandeEchelle(GrandeEchelleViewer):
 
         # Voir le dessin
         # (x1, y1, x2, y2) = (mini, 0, maxi, lenght)
-        a, b = get_a_b(mini, 0, maxi, lenght)
+        a, b = get_a_b(mini, lenght, maxi, 0)
         frame = int(a*depth + b)
 
-        # Inversion de la video
-        frame = lenght - frame
         # Pour ne jamais planté
         if frame < 0:
             frame = 0
         if frame >= lenght:
             frame = lenght - 1
 
-
-        print(frame)
         # Pile des 8 dernières valeurs lissées
         self.histo_slow.append(frame)
         del self.histo_slow[0]
@@ -240,7 +239,7 @@ class GrandeEchelle(GrandeEchelleViewer):
                                         type_='simple')[0])
         except:
             print("Erreur moving_average depth")
-        print(frame, self.histo_slow)
+
         self.frame = frame
 
     def draw_text(self, img, frame):
@@ -272,23 +271,8 @@ def get_a_b(x1, y1, x2, y2):
     return a, b
 
 
-
 def grande_echelle_run(conn, current_dir, config):
 
     ge = GrandeEchelle(conn, current_dir, config)
     # run est dans Viewer
     ge.run()
-
-
-        # # # Ma boucle PID
-        # # delta = int(frame - self.frame)
-        # # a, b = get_a_b(10, 10, 100, 20)
-        # # delta_new = int(a*(delta) + b)
-        # # frame_new = frame + delta_new
-        # # print(delta, delta_new, frame, frame_new)
-        # Pour ne jamais planté
-        # # if frame_new < 0:
-            # # frame_new = 0
-        # # if frame_new >= self.lenght:
-            # # frame_new = self.lenght - 1
-        # # self.frame = frame_new

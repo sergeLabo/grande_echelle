@@ -25,7 +25,7 @@ class MyRealSense:
         try:
             pipeline_profile = config.resolve(pipeline_wrapper)
         except:
-            print(f'Pas de Capteur Realsense connecté')
+            print('\n\nPas de Capteur Realsense connecté\n\n')
             os._exit(0)
 
         device = pipeline_profile.get_device()
