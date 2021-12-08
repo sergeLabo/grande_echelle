@@ -418,15 +418,13 @@ class Grande_EchelleApp(App):
         scr = self.screen_manager.get_screen('Main')
 
         sleep(0.5)
-        self.p1.terminate()
-        self.p2.terminate()
+        scr.p1.terminate()
+        scr.p2.terminate()
         sleep(0.5)
 
         # Kivy
         print("Quit final")
         Grande_EchelleApp.get_running_app().stop()
-
-
 
 
 

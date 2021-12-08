@@ -120,7 +120,8 @@ class GrandeEchelle(GrandeEchelleViewer):
 
         self.ge_conn_loop = 1
         self.frame = 0
-
+        self.last_time = time()
+        self.raz = int(self.config['histopocene']['raz'])
         if self.conn:
             self.ge_receive_thread()
 
@@ -140,6 +141,7 @@ class GrandeEchelle(GrandeEchelleViewer):
         self.frame = 0
         self.depth = 1
         self.histo = [self.profondeur_mini + 1000]*self.pile_size
+
         # Stockage des 8 dernières valeurs de frame
         self.slow_size = int(self.config['histopocene']['slow_size'])
         self.histo_slow = [0]*self.slow_size
@@ -152,6 +154,12 @@ class GrandeEchelle(GrandeEchelleViewer):
         global GE_LOOP
 
         while self.ge_conn_loop:
+            # Si pas de nouvelle frame en self.raz secondes, remise à 0
+            if time() - self.last_time > self.raz:
+                self.frame = 0
+                self.last_time = time()
+                print("Remise à zéro")
+
             if self.conn.poll():
                 data = self.conn.recv()
                 if data[0] == 'depth':
@@ -192,7 +200,6 @@ class GrandeEchelle(GrandeEchelleViewer):
                     print("Alerte: Quit reçu dans Grande Echelle")
                     GE_LOOP = 0
                     self.ge_conn_loop = 0
-                    # # os._exit(0)
 
             sleep(0.01)
 
@@ -215,8 +222,8 @@ class GrandeEchelle(GrandeEchelleViewer):
             print("Erreur moving_average depth")
 
         # Pour bien comprendre
-        mini = self.profondeur_mini + 100  # frame 0 si mini
-        maxi = self.profondeur_maxi - 300  # frame lenght si maxi
+        mini = self.profondeur_mini + 1000  # frame 0 si mini
+        maxi = self.profondeur_maxi - 500  # frame lenght si maxi
         lenght = self.lenght
 
         # Voir le dessin
