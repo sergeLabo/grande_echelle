@@ -386,7 +386,9 @@ class Grande_EchelleApp(App):
                                             'full_screen': 0,
                                             'mode_expo': 0,
                                             'brightness_contrast_on': 0,
-                                            'slow_size': 8})
+                                            'slow_size': 8,
+                                            'raz': 5})
+
         print("self.config peut maintenant être appelé")
 
     def build_settings(self, settings):
