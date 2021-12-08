@@ -15,8 +15,8 @@ kivy.require('2.0.0')
 # # from kivy.base import stopTouchApp
 from kivy.core.window import Window
 
-k = 1.4
-WS = (int(640*k), int(640*k))
+k = 1
+WS = (int(720*k), int(720*k))
 Window.size = WS
 
 
@@ -86,12 +86,11 @@ class MainScreen(Screen):
 
                         if data1[0] == 'quit':
                             print("\nQuit reçu dans Kivy de Posenet Realsense ")
+                            # Fait le quit dans GrandeEchelle et PoseRealsense
+                            # avec le quit envoyé par le Viewer
                             self.p2_conn.send(['quit', 1])
                             self.p1_conn.send(['quit', 1])
                             self.kivy_receive_loop = 0
-                            sleep(0.5)
-                            self.p1.terminate()
-                            self.p2.terminate()
                             self.app.do_quit()
 
             # De grande echelle
@@ -105,12 +104,11 @@ class MainScreen(Screen):
                     if data2 is not None:
                         if data2[0] == 'quit':
                             print("\nQuit reçu dans Kivy de Grande Echelle")
+                            # Fait le quit dans GrandeEchelle et PoseRealsense
+                            # avec le quit envoyé par le Viewer
                             self.p1_conn.send(['quit', 1])
                             self.p2_conn.send(['quit', 1])
                             self.kivy_receive_loop = 0
-                            sleep(0.5)
-                            self.p1.terminate()
-                            self.p2.terminate()
                             self.app.do_quit()
 
     def run_grande_echelle(self):
@@ -417,22 +415,12 @@ class Grande_EchelleApp(App):
 
     def do_quit(self):
         print("Je quitte proprement, j'attends ....")
+        scr = self.screen_manager.get_screen('Main')
 
-        # # sleep(0.5)
-
-        # Fin du processus fils
-        # # scr = self.screen_manager.get_screen('Main')
-
-        # Fin du thread
-        # # scr.kivy_receive_loop = 0
-
-        # Fin des Pipe
-        # # scr.p1_conn = None
-        # # scr.p2_conn = None
-
-        # # # Fin des process
-        # # scr.p1.terminate()
-        # # scr.p2.terminate()
+        sleep(0.5)
+        self.p1.terminate()
+        self.p2.terminate()
+        sleep(0.5)
 
         # Kivy
         print("Quit final")
