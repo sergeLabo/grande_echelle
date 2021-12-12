@@ -162,9 +162,11 @@ class GrandeEchelle(GrandeEchelleViewer):
 
             if self.conn.poll():
                 data = self.conn.recv()
+
                 if data[0] == 'depth':
                     if data[1]:
                         self.get_frame(data[1])
+                        self.last_time = time()
 
                 elif data[0] == 'info':
                     self.info = data[1]

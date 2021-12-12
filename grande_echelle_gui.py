@@ -3,7 +3,7 @@
 Interface graphique pour Grande Echelle
 """
 
-import os, sys
+
 from time import sleep
 from pathlib import Path
 from multiprocessing import Process, Pipe
@@ -12,7 +12,6 @@ from threading import Thread
 import kivy
 kivy.require('2.0.0')
 
-# # from kivy.base import stopTouchApp
 from kivy.core.window import Window
 
 k = 1
@@ -64,8 +63,8 @@ class MainScreen(Screen):
         self.run_grande_echelle()
 
     def kivy_receive_thread(self):
-        t = Thread(target=self.kivy_receive)
-        t.start()
+        t_kivy = Thread(target=self.kivy_receive)
+        t_kivy.start()
 
     def kivy_receive(self):
         while self.kivy_receive_loop:
@@ -419,7 +418,11 @@ class Grande_EchelleApp(App):
         print("Je quitte proprement, j'attends ....")
         scr = self.screen_manager.get_screen('Main')
 
+        scr.p2_conn.send(['quit', 1])
+        scr.p1_conn.send(['quit', 1])
+        scr.kivy_receive_loop = 0
         sleep(0.5)
+
         scr.p1.terminate()
         scr.p2.terminate()
         sleep(0.5)
