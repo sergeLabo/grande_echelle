@@ -156,7 +156,11 @@ class GrandeEchelle(GrandeEchelleViewer):
         while self.ge_conn_loop:
             # Si pas de nouvelle frame en self.raz secondes, remise à 0
             if time() - self.last_time > self.raz:
-                self.frame = 0
+                # Si tout près del'écran et non capturé
+                if self.frame > self.lenght - 500:
+                    self.frame = self.lenght - 1
+                else:
+                    self.frame = 0
                 self.last_time = time()
                 print("Remise à zéro")
 
