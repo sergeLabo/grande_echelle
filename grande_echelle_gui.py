@@ -4,10 +4,13 @@ Interface graphique pour Grande Echelle
 """
 
 
-from time import sleep
+from time import time, sleep
 from pathlib import Path
 from multiprocessing import Process, Pipe
 from threading import Thread
+import json
+import gzip
+from datetime import datetime
 
 import kivy
 kivy.require('2.0.0')
@@ -26,6 +29,64 @@ from kivy.clock import Clock
 
 from posenet_realsense import posenet_realsense_run
 from grande_echelle import grande_echelle_run
+from utils import MyTools
+
+
+
+class BigData:
+    """Enregistrement toutes les heures de toutes les depth, et sur quit.
+    Enregistrement dans un dossier /grande_echelle_data/ dans le home
+    3 mois de 6 jours de 6h / semaine = 500 Mo  de data
+    1 dossier par jour, 1 fichier par heure
+    12 semaines de 6 jours = 72 dossiers de 6 zip
+    """
+
+    def __init__(self):
+        # Création du dosier dans le home
+        self.mkdir_grande_echelle_data()
+
+        # Le dossier des data dans le home, c'est un objet Path
+        self.data_dir = Path.home() / 'grande_echelle_data'
+        print(f"Dossier des datas: {self.data_dir} type {type(self.data_dir)}")
+
+        # Le dossier du jour
+        self.mkdir_dir_day()
+
+        # Ce sera un objet Path
+        self.dir_day = None
+        self.mkdir_dir_day()
+
+        # Référence pour enregistrement toutes les heures
+        self.t_zero = time()
+
+    def mkdir_grande_echelle_data(self):
+        """Création du dossier ~/grande_echelle_data si non existant"""
+        MyTools().mkdir_in_home('grande_echelle_data')
+
+    def mkdir_dir_day(self):
+        dt_now = datetime.now()
+        dj = dt_now.strftime("%Y_%m_%d")
+        dd = self.data_dir / dj
+        print(f"Dossier du jour: {dd} type {type(dd)}")
+        MyTools().mkdir(dd)
+        self.dir_day = dd
+
+    def do_save(self, data):
+
+        dt_now = datetime.now()
+        dt = dt_now.strftime("%Y_%m_%d_%H_%M")
+        fichier = self.dir_day / f"cap_{dt}.zip"  # objet Path
+        print(f"Enregistrement de: {fichier}")
+        # fichier n'a pas besoin d'être converti en str()
+        with gzip.open(fichier, 'w') as f_out:
+            f_out.write(json.dumps(data).encode('utf-8'))
+
+    def main(self, datas):
+        t = time()
+        if t - self.t_zero > 600:
+            # Save
+            self.do_save(datas)
+            self.t_zero = t
 
 
 
@@ -55,6 +116,10 @@ class MainScreen(Screen):
 
         Clock.schedule_once(self.set_run_on, 1.0)
 
+        # Pour enregistrement en json
+        self.bd = BigData()
+        self.datas = []
+
         print("Initialisation du Screen MainScreen ok")
 
     def set_run_on(self, dt):
@@ -82,6 +147,9 @@ class MainScreen(Screen):
                         # Relais des depth
                         if data1[0] == 'from_realsense':
                             self.p2_conn.send(['depth', data1[1]])
+                            self.datas.append([time(), data1[1]])
+                            self.bd.main(self.datas)
+                            self.datas = []
 
                         if data1[0] == 'quit':
                             print("\nQuit reçu dans Kivy de Posenet Realsense ")
@@ -90,6 +158,7 @@ class MainScreen(Screen):
                             self.p2_conn.send(['quit', 1])
                             self.p1_conn.send(['quit', 1])
                             self.kivy_receive_loop = 0
+                            self.bd.main(self.datas)
                             self.app.do_quit()
 
             # De grande echelle
@@ -108,6 +177,7 @@ class MainScreen(Screen):
                             self.p1_conn.send(['quit', 1])
                             self.p2_conn.send(['quit', 1])
                             self.kivy_receive_loop = 0
+                            self.bd.main(self.datas)
                             self.app.do_quit()
 
     def run_grande_echelle(self):

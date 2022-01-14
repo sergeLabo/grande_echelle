@@ -49,7 +49,6 @@ from my_config import MyConfig
 from filtre import moving_average
 
 
-
 class PosenetRealsenseViewer:
     """Affichage dans une fenêtre OpenCV, et gestion des fenêtres"""
 
