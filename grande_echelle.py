@@ -161,8 +161,8 @@ class GrandeEchelle(GrandeEchelleViewer):
                     self.frame = self.lenght - 1
                 else:
                     self.frame = 0
+                # # print("Remise à zéro")
                 self.last_time = time()
-                print("Remise à zéro")
 
             if self.conn.poll():
                 data = self.conn.recv()

@@ -36,7 +36,9 @@ from utils import MyTools
 class BigData:
     """Enregistrement toutes les heures de toutes les depth, et sur quit.
     Enregistrement dans un dossier /grande_echelle_data/ dans le home
-    3 mois de 6 jours de 6h / semaine = 500 Mo  de data
+    40 ko pour 10 mn
+    240 ko pour 1h
+    3 mois de 6 jours de 6h / semaine = 6*3*30*240 = 130000 ko = 130 Mo
     1 dossier par jour, 1 fichier par heure
     12 semaines de 6 jours = 72 dossiers de 6 zip
     """
@@ -83,10 +85,11 @@ class BigData:
 
     def main(self, datas):
         t = time()
-        if t - self.t_zero > 600:
+        if t - self.t_zero > 3600:
             # Save
             self.do_save(datas)
             self.t_zero = t
+            return True
 
 
 
@@ -148,8 +151,10 @@ class MainScreen(Screen):
                         if data1[0] == 'from_realsense':
                             self.p2_conn.send(['depth', data1[1]])
                             self.datas.append([time(), data1[1]])
-                            self.bd.main(self.datas)
-                            self.datas = []
+                            done = self.bd.main(self.datas)
+                            if done:
+                                print("Saved.")
+                                self.datas = []
 
                         if data1[0] == 'quit':
                             print("\nQuit reçu dans Kivy de Posenet Realsense ")
@@ -158,7 +163,6 @@ class MainScreen(Screen):
                             self.p2_conn.send(['quit', 1])
                             self.p1_conn.send(['quit', 1])
                             self.kivy_receive_loop = 0
-                            self.bd.main(self.datas)
                             self.app.do_quit()
 
             # De grande echelle
@@ -177,7 +181,6 @@ class MainScreen(Screen):
                             self.p1_conn.send(['quit', 1])
                             self.p2_conn.send(['quit', 1])
                             self.kivy_receive_loop = 0
-                            self.bd.main(self.datas)
                             self.app.do_quit()
 
     def run_grande_echelle(self):
@@ -487,6 +490,7 @@ class Grande_EchelleApp(App):
     def do_quit(self):
         print("Je quitte proprement, j'attends ....")
         scr = self.screen_manager.get_screen('Main')
+        scr.bd.main(scr.datas)
 
         scr.p2_conn.send(['quit', 1])
         scr.p1_conn.send(['quit', 1])
