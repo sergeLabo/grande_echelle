@@ -83,7 +83,7 @@ class BigData:
         with gzip.open(fichier, 'w') as f_out:
             f_out.write(json.dumps(data).encode('utf-8'))
 
-    def main(self, datas):
+    def save_every_hours(self, datas):
         t = time()
         if t - self.t_zero > 3600:
             # Save
@@ -151,7 +151,7 @@ class MainScreen(Screen):
                         if data1[0] == 'from_realsense':
                             self.p2_conn.send(['depth', data1[1]])
                             self.datas.append([time(), data1[1]])
-                            done = self.bd.main(self.datas)
+                            done = self.bd.save_every_hours(self.datas)
                             if done:
                                 print("Saved.")
                                 self.datas = []
@@ -490,7 +490,7 @@ class Grande_EchelleApp(App):
     def do_quit(self):
         print("Je quitte proprement, j'attends ....")
         scr = self.screen_manager.get_screen('Main')
-        scr.bd.main(scr.datas)
+        scr.bd.do_save(scr.datas)
 
         scr.p2_conn.send(['quit', 1])
         scr.p1_conn.send(['quit', 1])
