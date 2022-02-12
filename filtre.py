@@ -24,6 +24,7 @@ def moving_average(x, n, type_='simple'):
 
     return a_liss
 
+
 def get_a_b(x1, y1, x2, y2):
     a = (y1 - y2)/(x1 - x2)
     b = y1 - a*x1
