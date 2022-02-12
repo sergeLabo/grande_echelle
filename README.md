@@ -42,7 +42,7 @@ python3 -m venv --system-site-packages mon_env
 # Activation
 source mon_env/bin/activate
 # Installation des packages, numpy, opencv-python, pyrealsense2, kivy, ...
-python3 -m pip install -r requirements_with_version.txt
+python3 -m pip install -r requirements.txt
 ```
 
 #### Bug dans Kivy
