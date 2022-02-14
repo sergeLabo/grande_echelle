@@ -62,7 +62,7 @@ Ce lanceur lance un terminal et l'interface graphique, en autorun.
 
 ``` bash
 git fetch origin
-git reset --hard origin/master
+git reset --hard origin/main
 ```
 
 ### Fichier de configuration
