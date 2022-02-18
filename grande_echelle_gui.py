@@ -367,7 +367,7 @@ class Reglage(Screen):
         self.brightness_contrast_on = value
         if scr.p1_conn:
             scr.p1_conn.send(['brightness_contrast_on', self.brightness_contrast_on])
-        self.app.config.set('histopocene', 'brightness_contrast_on',
+        self.app.config.set('pose', 'brightness_contrast_on',
                                         self.brightness_contrast_on)
         self.app.config.write()
         print("brightness_contrast_on =", self.brightness_contrast_on)
